@@ -1,6 +1,9 @@
 {
   "name": "conveyor-sandbox",
   "private": true,
+  "bin": {
+    "greet": "bin/greet.mjs"
+  },
   "scripts": {
     "test": "node --test"
   }
