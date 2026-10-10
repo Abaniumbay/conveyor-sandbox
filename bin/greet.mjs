@@ -1,12 +1,22 @@
 #!/usr/bin/env node
 
-const usage = 'Usage: greet farewell [name]';
-const args = process.argv.slice(2);
+import { greeting } from './greeting.mjs';
 
-if (args[0] !== 'farewell' || args.length > 2) {
+const args = process.argv.slice(2);
+const command = args[0];
+const name = args[1];
+const usage = `Usage: greet ${command === 'session' ? 'session' : 'farewell'} [name]`;
+
+function farewell(name) {
+  return name === undefined ? 'Goodbye!' : `Goodbye, ${name}!`;
+}
+
+if (!['farewell', 'session'].includes(command) || args.length > 2) {
   console.error(usage);
   process.exitCode = 2;
+} else if (command === 'session') {
+  console.log(greeting(name));
+  console.log(farewell(name));
 } else {
-  const name = args[1];
-  console.log(name === undefined ? 'Goodbye!' : `Goodbye, ${name}!`);
+  console.log(farewell(name));
 }
