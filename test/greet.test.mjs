@@ -12,8 +12,11 @@ test('exposes greet as a package command', () => {
   assert.equal(packageJson.bin.greet, 'bin/greet.mjs');
 });
 
-function run(args) {
-  return spawnSync(process.execPath, [command, ...args], { encoding: 'utf8' });
+function run(args, lang = 'en_US.UTF-8') {
+  return spawnSync(process.execPath, [command, ...args], {
+    encoding: 'utf8',
+    env: { ...process.env, LANG: lang },
+  });
 }
 
 test('says farewell to a supplied name', () => {
@@ -60,6 +63,14 @@ test('starts an unnamed session with the default greeting and farewell', () => {
   assert.equal(result.stdout.slice('Hello, world!\n'.length), farewell.stdout);
   assert.equal(result.stderr, '');
   assert.equal(farewell.status, 0);
+});
+
+test('uses the Persian greeting for a named session when LANG is Persian', () => {
+  const result = run(['session', 'Ada'], 'fa_IR.UTF-8');
+
+  assert.equal(result.status, 0);
+  assert.equal(result.stdout, 'سلام، Ada!\nGoodbye, Ada!\n');
+  assert.equal(result.stderr, '');
 });
 
 test('rejects multiple session names with a usage message', () => {

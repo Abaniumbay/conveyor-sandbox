@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+import { greeting } from './greeting.mjs';
+
 const args = process.argv.slice(2);
 const command = args[0];
 const name = args[1];
@@ -7,10 +9,6 @@ const usage = `Usage: greet ${command === 'session' ? 'session' : 'farewell'} [n
 
 function farewell(name) {
   return name === undefined ? 'Goodbye!' : `Goodbye, ${name}!`;
-}
-
-function greeting(name) {
-  return `Hello, ${name === undefined ? 'world' : name}!`;
 }
 
 if (!['farewell', 'session'].includes(command) || args.length > 2) {
