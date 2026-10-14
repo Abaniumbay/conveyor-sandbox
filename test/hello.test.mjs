@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 
 const command = fileURLToPath(new URL('../bin/hello.mjs', import.meta.url));
 
-function run(args, lang) {
+function run(args, lang, cwd) {
   const env = { ...process.env };
   if (lang === undefined) {
     delete env.LANG;
@@ -16,7 +16,7 @@ function run(args, lang) {
     env.LANG = lang;
   }
 
-  return spawnSync(process.execPath, [command, ...args], { encoding: 'utf8', env });
+  return spawnSync(process.execPath, [command, ...args], { encoding: 'utf8', env, cwd });
 }
 
 function withNameFile(contents, callback) {
@@ -118,6 +118,32 @@ test('rejects more than one name with a usage message', () => {
   assert.equal(result.status, 2);
   assert.equal(result.stdout, '');
   assert.match(result.stderr, /^Usage: node bin\/hello\.mjs \[name \| --name-file <path>\] \(at most one name source accepted\)\n$/);
+});
+
+test('rejects unknown long and short options before or after a name', () => {
+  const usage = 'Usage: node bin/hello.mjs [name | --name-file <path>] (at most one name source accepted)\n';
+
+  for (const args of [['--unknown'], ['--unknown', 'Ada'], ['Ada', '--unknown'], ['-z'], ['-z', 'Ada'], ['Ada', '-z']]) {
+    const result = run(args);
+
+    assert.equal(result.status, 2, `status for ${args.join(' ')}`);
+    assert.equal(result.stdout, '', `stdout for ${args.join(' ')}`);
+    assert.equal(result.stderr, usage, `stderr for ${args.join(' ')}`);
+  }
+});
+
+test('treats a hyphen-prefixed name-file operand as a path', () => {
+  const directory = mkdtempSync(join(tmpdir(), 'hello-name-'));
+
+  try {
+    const result = run(['--name-file', '-z'], undefined, directory);
+
+    assert.equal(result.status, 1);
+    assert.equal(result.stdout, '');
+    assert.ok(result.stderr.startsWith('Error: cannot read name file -z: '));
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
 });
 
 test('uses English for unset, empty, English, and unsupported LANG values', () => {
