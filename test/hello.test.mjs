@@ -32,6 +32,14 @@ test('greets the supplied name', () => {
   assert.equal(result.stderr, '');
 });
 
+test('trims surrounding whitespace from the supplied name', () => {
+  const result = run(['  Ada Lovelace  ']);
+
+  assert.equal(result.status, 0);
+  assert.equal(result.stdout, 'Hello, Ada Lovelace!\n');
+  assert.equal(result.stderr, '');
+});
+
 test('rejects more than one name with a usage message', () => {
   const result = run(['Ada', 'Grace']);
 
