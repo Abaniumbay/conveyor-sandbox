@@ -146,6 +146,26 @@ test('treats a hyphen-prefixed name-file operand as a path', () => {
   }
 });
 
+test('preserves --shout when it is consumed as the name-file path', () => {
+  const directory = mkdtempSync(join(tmpdir(), 'hello-name-'));
+
+  try {
+    writeFileSync(join(directory, '--shout'), 'Ada\n');
+
+    const result = run(['--name-file', '--shout'], undefined, directory);
+    assert.equal(result.status, 0);
+    assert.equal(result.stdout, 'Hello, Ada!\n');
+    assert.equal(result.stderr, '');
+
+    const shoutedResult = run(['--shout', '--name-file', '--shout'], undefined, directory);
+    assert.equal(shoutedResult.status, 0);
+    assert.equal(shoutedResult.stdout, 'HELLO, ADA!\n');
+    assert.equal(shoutedResult.stderr, '');
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
+});
+
 test('uses English for unset, empty, English, and unsupported LANG values', () => {
   for (const lang of [undefined, '', 'en_US.UTF-8', 'xx_XX.UTF-8']) {
     for (const [args, expected] of [[[], 'Hello, world!\n'], [['Ada'], 'Hello, Ada!\n']]) {

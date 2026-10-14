@@ -2,8 +2,11 @@ import { readFileSync } from 'node:fs';
 import { greeting } from './greeting.mjs';
 
 const rawArgs = process.argv.slice(2);
-const shout = rawArgs.includes('--shout');
-const args = rawArgs.filter(arg => arg !== '--shout');
+const rawNameFileIndex = rawArgs.indexOf('--name-file');
+const isNameFileOperand = index => rawNameFileIndex !== -1 && index === rawNameFileIndex + 1;
+const isShoutFlag = (arg, index) => arg === '--shout' && !isNameFileOperand(index);
+const shout = rawArgs.some(isShoutFlag);
+const args = rawArgs.filter((arg, index) => !isShoutFlag(arg, index));
 const nameFileIndex = args.indexOf('--name-file');
 const unknownOptionIndex = args.findIndex((arg, index) =>
   arg.startsWith('-') && arg !== '--name-file' && !(nameFileIndex !== -1 && index === nameFileIndex + 1),
