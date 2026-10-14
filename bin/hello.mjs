@@ -1,12 +1,18 @@
 import { readFileSync } from 'node:fs';
 import { greeting } from './greeting.mjs';
 
-const args = process.argv.slice(2);
+const rawArgs = process.argv.slice(2);
+const shout = rawArgs.includes('--shout');
+const args = rawArgs.filter(arg => arg !== '--shout');
 const nameFileIndex = args.indexOf('--name-file');
 const unknownOptionIndex = args.findIndex((arg, index) =>
   arg.startsWith('-') && arg !== '--name-file' && !(nameFileIndex !== -1 && index === nameFileIndex + 1),
 );
 const usage = 'Usage: node bin/hello.mjs [name | --name-file <path>] (at most one name source accepted)';
+const printGreeting = name => {
+  const message = greeting(name);
+  console.log(shout ? message.toUpperCase() : message);
+};
 
 if (unknownOptionIndex !== -1 || (nameFileIndex !== -1 && (args.length !== 2 || nameFileIndex !== 0))) {
   console.error(usage);
@@ -20,11 +26,11 @@ if (unknownOptionIndex !== -1 || (nameFileIndex !== -1 && (args.length !== 2 || 
   try {
     const contents = readFileSync(path, 'utf8');
     const firstLine = contents.split(/\r?\n/, 1)[0];
-    console.log(greeting(firstLine));
+    printGreeting(firstLine);
   } catch (error) {
     console.error(`Error: cannot read name file ${path}: ${error.message}`);
     process.exitCode = 1;
   }
 } else {
-  console.log(greeting(args[0]));
+  printGreeting(args[0]);
 }
