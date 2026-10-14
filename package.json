@@ -1,6 +1,7 @@
 {
   "name": "conveyor-sandbox",
   "private": true,
+  "version": "1.0.0",
   "bin": {
     "greet": "bin/greet.mjs"
   },
