@@ -12,6 +12,15 @@ test('exposes greet as a package command', () => {
   assert.equal(packageJson.bin.greet, 'bin/greet.mjs');
 });
 
+test('prints the package version with --version', () => {
+  const packageJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
+  const result = run(['--version']);
+
+  assert.equal(result.status, 0);
+  assert.equal(result.stdout, `${packageJson.version}\n`);
+  assert.equal(result.stderr, '');
+});
+
 function run(args, lang = 'en_US.UTF-8') {
   return spawnSync(process.execPath, [command, ...args], {
     encoding: 'utf8',
