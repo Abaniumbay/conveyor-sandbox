@@ -3,9 +3,12 @@ import { greeting } from './greeting.mjs';
 
 const args = process.argv.slice(2);
 const nameFileIndex = args.indexOf('--name-file');
+const unknownOptionIndex = args.findIndex((arg, index) =>
+  arg.startsWith('-') && arg !== '--name-file' && !(nameFileIndex !== -1 && index === nameFileIndex + 1),
+);
 const usage = 'Usage: node bin/hello.mjs [name | --name-file <path>] (at most one name source accepted)';
 
-if (nameFileIndex !== -1 && (args.length !== 2 || nameFileIndex !== 0)) {
+if (unknownOptionIndex !== -1 || (nameFileIndex !== -1 && (args.length !== 2 || nameFileIndex !== 0))) {
   console.error(usage);
   process.exitCode = 2;
 } else if (nameFileIndex === -1 && args.length > 1) {
