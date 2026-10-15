@@ -4,5 +4,5 @@ export function greeting(name) {
   const defaultName = persian ? 'دنیا' : 'world';
   const normalizedName = name?.trim();
 
-  return `${greeting} ${normalizedName ?? defaultName}!`;
+  return `${greeting} ${normalizedName || defaultName}!`;
 }

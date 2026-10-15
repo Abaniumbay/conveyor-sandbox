@@ -112,6 +112,42 @@ test('trims surrounding whitespace from the supplied name', () => {
   assert.equal(result.stderr, '');
 });
 
+test('uses the locale default for empty and whitespace-only positional names', () => {
+  for (const [lang, greeting] of [[undefined, 'Hello, world!'], ['fa', 'سلام، دنیا!']]) {
+    for (const name of ['', ' \t ']) {
+      for (const [args, expected] of [
+        [[name], `${greeting}\n`],
+        [['--shout', name], `${greeting.toUpperCase()}\n`],
+      ]) {
+        const result = run(args, lang);
+
+        assert.equal(result.status, 0, `status for ${JSON.stringify(name)} with LANG=${lang ?? '(unset)'}`);
+        assert.equal(result.stdout, expected, `stdout for ${JSON.stringify(name)} with LANG=${lang ?? '(unset)'}`);
+        assert.equal(result.stderr, '', `stderr for ${JSON.stringify(name)} with LANG=${lang ?? '(unset)'}`);
+      }
+    }
+  }
+});
+
+test('uses the locale default for empty and whitespace-only first lines from --name-file', () => {
+  for (const [lang, greeting] of [[undefined, 'Hello, world!'], ['fa', 'سلام، دنیا!']]) {
+    for (const contents of ['', ' \t \nIgnored\n']) {
+      withNameFile(contents, path => {
+        for (const [args, expected] of [
+          [['--name-file', path], `${greeting}\n`],
+          [['--shout', '--name-file', path], `${greeting.toUpperCase()}\n`],
+        ]) {
+          const result = run(args, lang);
+
+          assert.equal(result.status, 0, `status for ${JSON.stringify(contents)} with LANG=${lang ?? '(unset)'}`);
+          assert.equal(result.stdout, expected, `stdout for ${JSON.stringify(contents)} with LANG=${lang ?? '(unset)'}`);
+          assert.equal(result.stderr, '', `stderr for ${JSON.stringify(contents)} with LANG=${lang ?? '(unset)'}`);
+        }
+      });
+    }
+  }
+});
+
 test('rejects more than one name with a usage message', () => {
   const result = run(['Ada', 'Grace']);
 
