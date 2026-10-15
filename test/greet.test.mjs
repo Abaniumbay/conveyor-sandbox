@@ -74,6 +74,16 @@ test('starts an unnamed session with the default greeting and farewell', () => {
   assert.equal(farewell.status, 0);
 });
 
+test('starts an empty-name session with the default greeting and farewell', () => {
+  for (const name of ['', '   ']) {
+    const result = run(['session', name]);
+
+    assert.equal(result.status, 0);
+    assert.equal(result.stdout, 'Hello, world!\nGoodbye!\n');
+    assert.equal(result.stderr, '');
+  }
+});
+
 test('uses the Persian greeting for a named session when LANG is Persian', () => {
   const result = run(['session', 'Ada'], 'fa_IR.UTF-8');
 

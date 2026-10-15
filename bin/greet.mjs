@@ -19,8 +19,9 @@ if (command === '--version' && args.length === 1) {
   console.error(usage);
   process.exitCode = 2;
 } else if (command === 'session') {
-  console.log(greeting(name));
-  console.log(farewell(name));
+  const sessionName = name?.trim() || undefined;
+  console.log(greeting(sessionName));
+  console.log(farewell(sessionName));
 } else {
   console.log(farewell(name));
 }
