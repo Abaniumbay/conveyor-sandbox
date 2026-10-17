@@ -11,6 +11,10 @@ default is `1`; `n` must be a positive whole decimal number. For example,
 times. This option belongs to the standalone command and is not supported by
 the installed `greet` command.
 
+The standalone command also supports `--lowercase` to print the complete
+selected greeting in lower case. For example, `node bin/hello.mjs --lowercase Ada`
+prints `hello, ada!`. `--lowercase` cannot be combined with `--shout`.
+
 | Option | Environment variable | Default | Description |
 | --- | --- | --- | --- |
 | `--name` | `HELLO_NAME` | `world` | Who is greeted |

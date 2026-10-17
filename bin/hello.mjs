@@ -6,6 +6,7 @@ const rawNameFileIndex = rawArgs.indexOf('--name-file');
 const isNameFileOperand = index => rawNameFileIndex !== -1 && index === rawNameFileIndex + 1;
 const args = [];
 let shout = false;
+let lowercase = false;
 let repeat = 1n;
 let repeatSpecified = false;
 let invalidRepeat = false;
@@ -18,6 +19,8 @@ for (let index = 0; index < rawArgs.length; index += 1) {
     args.push(arg);
   } else if (arg === '--shout') {
     shout = true;
+  } else if (arg === '--lowercase') {
+    lowercase = true;
   } else if (arg === '--repeat') {
     if (repeatSpecified) duplicateRepeat = true;
     repeatSpecified = true;
@@ -44,12 +47,16 @@ const unknownOptionIndex = args.findIndex((arg, index) =>
 const usage = 'Usage: node bin/hello.mjs [name | --name-file <path>] (at most one name source accepted)';
 const printGreeting = name => {
   const message = greeting(name);
+  const selectedMessage = shout ? message.toUpperCase() : lowercase ? message.toLowerCase() : message;
   for (let count = 0n; count < repeat; count += 1n) {
-    console.log(shout ? message.toUpperCase() : message);
+    console.log(selectedMessage);
   }
 };
 
-if (invalidRepeat) {
+if (shout && lowercase) {
+  console.error('error: --lowercase and --shout cannot be combined');
+  process.exitCode = 1;
+} else if (invalidRepeat) {
   console.error('error: --repeat needs a whole number of at least 1');
   process.exitCode = 1;
 } else if (duplicateRepeat || unknownOptionIndex !== -1 || (nameFileIndex !== -1 && (args.length !== 2 || nameFileIndex !== 0))) {

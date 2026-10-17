@@ -55,6 +55,69 @@ test('documents repeat for the standalone hello command only', () => {
   assert.match(reference, /not supported by\s+the installed `greet` command/);
 });
 
+test('documents lowercase for the standalone hello command', () => {
+  assert.match(reference, /`--lowercase`[\s\S]*`node bin\/hello\.mjs --lowercase Ada`[\s\S]*hello, ada!/);
+  assert.match(reference, /cannot be combined with `--shout`/);
+});
+
+test('lowercases the selected greeting in either positional argument order', () => {
+  for (const args of [['--lowercase', 'Ada'], ['Ada', '--lowercase']]) {
+    const result = run(args);
+
+    assert.equal(result.status, 0);
+    assert.equal(result.stdout, 'hello, ada!\n');
+    assert.equal(result.stderr, '');
+  }
+});
+
+test('lowercases default, name-file, Persian, and repeated greetings', () => {
+  for (const [args, lang, expected] of [
+    [['--lowercase'], undefined, 'hello, world!\n'],
+    [['--lowercase'], 'fa', 'سلام، دنیا!\n'],
+    [['--lowercase', '--repeat', '2'], 'fa', 'سلام، دنیا!\nسلام، دنیا!\n'],
+  ]) {
+    const result = run(args, lang);
+    assert.equal(result.status, 0);
+    assert.equal(result.stdout, expected);
+    assert.equal(result.stderr, '');
+  }
+
+  withNameFile('ADA\n', path => {
+    const result = run(['--name-file', path, '--lowercase']);
+    assert.equal(result.status, 0);
+    assert.equal(result.stdout, 'hello, ada!\n');
+    assert.equal(result.stderr, '');
+  });
+});
+
+test('rejects lowercase with shout in either option order', () => {
+  for (const args of [['--lowercase', '--shout', 'Ada'], ['--shout', '--lowercase', 'Ada']]) {
+    const result = run(args);
+    assert.equal(result.status, 1);
+    assert.equal(result.stdout, '');
+    assert.equal(result.stderr, 'error: --lowercase and --shout cannot be combined\n');
+  }
+});
+
+test('keeps --lowercase as the operand of --name-file', () => {
+  const directory = mkdtempSync(join(tmpdir(), 'hello-name-'));
+
+  try {
+    writeFileSync(join(directory, '--lowercase'), 'Ada\n');
+    const readable = run(['--name-file', '--lowercase'], undefined, directory);
+    assert.equal(readable.status, 0);
+    assert.equal(readable.stdout, 'Hello, Ada!\n');
+    assert.equal(readable.stderr, '');
+
+    const unreadable = run(['--name-file', '--lowercase'], undefined, tmpdir());
+    assert.equal(unreadable.status, 1);
+    assert.equal(unreadable.stdout, '');
+    assert.match(unreadable.stderr, /^Error: cannot read name file --lowercase: .+\n$/);
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
+});
+
 test('repeats a supplied greeting the requested number of times', () => {
   const result = run(['--repeat', '3', 'Ada']);
 
