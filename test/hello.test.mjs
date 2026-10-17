@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import test from 'node:test';
@@ -7,6 +7,7 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const command = fileURLToPath(new URL('../bin/hello.mjs', import.meta.url));
+const reference = readFileSync(new URL('../docs/reference.md', import.meta.url), 'utf8');
 
 function run(args, lang, cwd) {
   const env = { ...process.env };
@@ -45,6 +46,74 @@ test('greets the supplied name', () => {
   assert.equal(result.status, 0);
   assert.equal(result.stdout, 'Hello, Ada!\n');
   assert.equal(result.stderr, '');
+});
+
+test('documents repeat for the standalone hello command only', () => {
+  assert.match(reference, /`node bin\/hello\.mjs`[\s\S]*`--repeat <n>`/);
+  assert.match(reference, /default is `1`[\s\S]*positive whole decimal number/);
+  assert.match(reference, /`node bin\/hello\.mjs --shout --repeat 3 Ada`/);
+  assert.match(reference, /not supported by\s+the installed `greet` command/);
+});
+
+test('repeats a supplied greeting the requested number of times', () => {
+  const result = run(['--repeat', '3', 'Ada']);
+
+  assert.equal(result.status, 0);
+  assert.equal(result.stdout, 'Hello, Ada!\nHello, Ada!\nHello, Ada!\n');
+  assert.equal(result.stderr, '');
+});
+
+test('defaults repeat to one and accepts an explicit repeat count of one', () => {
+  for (const args of [['Ada'], ['--repeat', '1', 'Ada']]) {
+    const result = run(args);
+
+    assert.equal(result.status, 0);
+    assert.equal(result.stdout, 'Hello, Ada!\n');
+    assert.equal(result.stderr, '');
+  }
+});
+
+test('rejects missing and invalid repeat counts without printing a greeting', () => {
+  for (const args of [['--repeat'], ...['0', '-1', '1.5', 'abc'].map(value => ['--repeat', value])]) {
+    const result = run(args);
+
+    assert.equal(result.status, 1);
+    assert.equal(result.stdout, '');
+    assert.equal(result.stderr, 'error: --repeat needs a whole number of at least 1\n');
+  }
+});
+
+test('combines repeat with shout in either option order', () => {
+  for (const args of [['--shout', '--repeat', '2', 'Ada'], ['--repeat', '2', '--shout', 'Ada']]) {
+    const result = run(args);
+
+    assert.equal(result.status, 0);
+    assert.equal(result.stdout, 'HELLO, ADA!\nHELLO, ADA!\n');
+    assert.equal(result.stderr, '');
+  }
+});
+
+test('repeats default, name-file, and Persian-locale greetings', () => {
+  const defaultGreeting = run(['--repeat', '2'], 'fa');
+  assert.equal(defaultGreeting.status, 0);
+  assert.equal(defaultGreeting.stdout, 'سلام، دنیا!\nسلام، دنیا!\n');
+  assert.equal(defaultGreeting.stderr, '');
+
+  withNameFile(' Ada \nGrace\n', path => {
+    const result = run(['--repeat', '2', '--name-file', path]);
+
+    assert.equal(result.status, 0);
+    assert.equal(result.stdout, 'Hello, Ada!\nHello, Ada!\n');
+    assert.equal(result.stderr, '');
+  });
+});
+
+test('keeps an option-shaped --name-file operand as its path', () => {
+  const result = run(['--repeat', '2', '--name-file', '--shout']);
+
+  assert.equal(result.status, 1);
+  assert.equal(result.stdout, '');
+  assert.match(result.stderr, /^Error: cannot read name file --shout: .+\n$/);
 });
 
 test('greets the first line from --name-file', () => {

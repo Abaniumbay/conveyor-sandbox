@@ -107,3 +107,11 @@ test('rejects an unknown subcommand with a usage message', () => {
   assert.equal(result.stdout, '');
   assert.match(result.stderr, /^Usage: greet farewell \[name\]\n$/);
 });
+
+test('does not add standalone hello options as greet commands', () => {
+  const result = run(['--repeat', '2', 'Ada']);
+
+  assert.equal(result.status, 2);
+  assert.equal(result.stdout, '');
+  assert.equal(result.stderr, 'Usage: greet farewell [name]\n');
+});
