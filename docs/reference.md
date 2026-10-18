@@ -15,6 +15,13 @@ The standalone command also supports `--lowercase` to print the complete
 selected greeting in lower case. For example, `node bin/hello.mjs --lowercase Ada`
 prints `hello, ada!`. `--lowercase` cannot be combined with `--shout`.
 
+The standalone command also supports `--prefix <text>` to place the supplied
+text and a space before the selected greeting. For example,
+`node bin/hello.mjs --prefix Hey Ada` prints `Hey Hello, Ada!`. This option
+belongs to `node bin/hello.mjs` and is not supported by the installed `greet`
+command. Omitting the value prints `error: --prefix needs a value` to stderr
+and exits with status 1.
+
 | Option | Environment variable | Default | Description |
 | --- | --- | --- | --- |
 | `--name` | `HELLO_NAME` | `world` | Who is greeted |

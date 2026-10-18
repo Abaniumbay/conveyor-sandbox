@@ -7,6 +7,8 @@ const isNameFileOperand = index => rawNameFileIndex !== -1 && index === rawNameF
 const args = [];
 let shout = false;
 let lowercase = false;
+let prefix;
+let invalidPrefix = false;
 let repeat = 1n;
 let repeatSpecified = false;
 let invalidRepeat = false;
@@ -17,6 +19,13 @@ for (let index = 0; index < rawArgs.length; index += 1) {
 
   if (isNameFileOperand(index)) {
     args.push(arg);
+  } else if (arg === '--prefix') {
+    if (index + 1 >= rawArgs.length || isNameFileOperand(index + 1)) {
+      invalidPrefix = true;
+    } else {
+      prefix = rawArgs[index + 1];
+      index += 1;
+    }
   } else if (arg === '--shout') {
     shout = true;
   } else if (arg === '--lowercase') {
@@ -48,8 +57,9 @@ const usage = 'Usage: node bin/hello.mjs [name | --name-file <path>] (at most on
 const printGreeting = name => {
   const message = greeting(name);
   const selectedMessage = shout ? message.toUpperCase() : lowercase ? message.toLowerCase() : message;
+  const output = prefix === undefined ? selectedMessage : `${prefix} ${selectedMessage}`;
   for (let count = 0n; count < repeat; count += 1n) {
-    console.log(selectedMessage);
+    console.log(output);
   }
 };
 
@@ -58,6 +68,9 @@ if (shout && lowercase) {
   process.exitCode = 1;
 } else if (invalidRepeat) {
   console.error('error: --repeat needs a whole number of at least 1');
+  process.exitCode = 1;
+} else if (invalidPrefix) {
+  console.error('error: --prefix needs a value');
   process.exitCode = 1;
 } else if (duplicateRepeat || unknownOptionIndex !== -1 || (nameFileIndex !== -1 && (args.length !== 2 || nameFileIndex !== 0))) {
   console.error(usage);
