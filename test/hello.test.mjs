@@ -48,6 +48,67 @@ test('greets the supplied name', () => {
   assert.equal(result.stderr, '');
 });
 
+test('prefixes the selected greeting before or after a positional name', () => {
+  for (const [args, expected] of [
+    [['--prefix', 'Hey', 'Ada'], 'Hey Hello, Ada!\n'],
+    [['Ada', '--prefix', 'Hey'], 'Hey Hello, Ada!\n'],
+    [['--prefix', 'Hey'], 'Hey Hello, world!\n'],
+  ]) {
+    const result = run(args);
+    assert.equal(result.status, 0);
+    assert.equal(result.stdout, expected);
+    assert.equal(result.stderr, '');
+  }
+});
+
+test('rejects a missing prefix value without printing a greeting', () => {
+  const result = run(['--prefix']);
+  assert.equal(result.status, 1);
+  assert.equal(result.stdout, '');
+  assert.equal(result.stderr, 'error: --prefix needs a value\n');
+});
+
+test('prefixes each selected greeting without transforming the prefix', () => {
+  for (const [args, lang, expected] of [
+    [['--prefix', 'Hey', '--repeat', '2', 'Ada'], undefined, 'Hey Hello, Ada!\nHey Hello, Ada!\n'],
+    [['--prefix', 'Hey', '--shout', 'Ada'], undefined, 'Hey HELLO, ADA!\n'],
+    [['--prefix', 'Hey', '--lowercase', 'Ada'], undefined, 'Hey hello, ada!\n'],
+    [['--prefix', 'Hey'], 'fa', 'Hey سلام، دنیا!\n'],
+  ]) {
+    const result = run(args, lang);
+    assert.equal(result.status, 0);
+    assert.equal(result.stdout, expected);
+    assert.equal(result.stderr, '');
+  }
+
+  withNameFile('Ada\n', path => {
+    const result = run(['--prefix', 'Hey', '--name-file', path]);
+    assert.equal(result.status, 0);
+    assert.equal(result.stdout, 'Hey Hello, Ada!\n');
+    assert.equal(result.stderr, '');
+  });
+});
+
+test('keeps an option-shaped --name-file operand as its path when using prefix', () => {
+  const directory = mkdtempSync(join(tmpdir(), 'hello-name-'));
+  try {
+    writeFileSync(join(directory, '--prefix'), 'Ada\n');
+    const result = run(['--prefix', 'Hey', '--name-file', '--prefix'], undefined, directory);
+    assert.equal(result.status, 0);
+    assert.equal(result.stdout, 'Hey Hello, Ada!\n');
+    assert.equal(result.stderr, '');
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
+});
+
+test('documents prefix for the standalone command only', () => {
+  assert.match(reference, /`node bin\/hello\.mjs`[\s\S]*`--prefix <text>`/);
+  assert.match(reference, /`node bin\/hello\.mjs --prefix Hey Ada`[\s\S]*Hey Hello, Ada!/);
+  assert.match(reference, /error: --prefix needs a value/);
+  assert.match(reference, /not supported by\s+the installed `greet` command/);
+});
+
 test('documents repeat for the standalone hello command only', () => {
   assert.match(reference, /`node bin\/hello\.mjs`[\s\S]*`--repeat <n>`/);
   assert.match(reference, /default is `1`[\s\S]*positive whole decimal number/);
