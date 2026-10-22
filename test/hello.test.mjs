@@ -180,11 +180,13 @@ test('keeps --lowercase as the operand of --name-file', () => {
 });
 
 test('repeats a supplied greeting the requested number of times', () => {
-  const result = run(['--repeat', '3', 'Ada']);
+  for (let count = 1; count <= 10; count += 1) {
+    const result = run(['--repeat', String(count), 'Ada']);
 
-  assert.equal(result.status, 0);
-  assert.equal(result.stdout, 'Hello, Ada!\nHello, Ada!\nHello, Ada!\n');
-  assert.equal(result.stderr, '');
+    assert.equal(result.status, 0);
+    assert.equal(result.stdout, 'Hello, Ada!\n'.repeat(count));
+    assert.equal(result.stderr, '');
+  }
 });
 
 test('defaults repeat to one and accepts an explicit repeat count of one', () => {
@@ -198,21 +200,21 @@ test('defaults repeat to one and accepts an explicit repeat count of one', () =>
 });
 
 test('rejects missing and invalid repeat counts without printing a greeting', () => {
-  for (const args of [['--repeat'], ...['0', '-1', '1.5', 'abc'].map(value => ['--repeat', value])]) {
+  for (const args of [['--repeat'], ...['0', '11', '999999999999999999999', '-1', '1.5', 'abc'].map(value => ['--repeat', value])]) {
     const result = run(args);
 
     assert.equal(result.status, 1);
     assert.equal(result.stdout, '');
-    assert.equal(result.stderr, 'error: --repeat needs a whole number of at least 1\n');
+    assert.equal(result.stderr, 'error: --repeat must be a whole decimal number from 1 to 10\n');
   }
 });
 
 test('combines repeat with shout in either option order', () => {
-  for (const args of [['--shout', '--repeat', '2', 'Ada'], ['--repeat', '2', '--shout', 'Ada']]) {
+  for (const args of [['--shout', '--repeat', '3', 'Ada'], ['--repeat', '3', '--shout', 'Ada']]) {
     const result = run(args);
 
     assert.equal(result.status, 0);
-    assert.equal(result.stdout, 'HELLO, ADA!\nHELLO, ADA!\n');
+    assert.equal(result.stdout, 'HELLO, ADA!\n'.repeat(3));
     assert.equal(result.stderr, '');
   }
 });

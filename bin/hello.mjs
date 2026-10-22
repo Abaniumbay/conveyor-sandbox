@@ -38,7 +38,7 @@ for (let index = 0; index < rawArgs.length; index += 1) {
     } else {
       const value = rawArgs[index + 1];
       index += 1;
-      if (!/^\d+$/.test(value) || BigInt(value) < 1n) {
+      if (!/^\d+$/.test(value) || BigInt(value) < 1n || BigInt(value) > 10n) {
         invalidRepeat = true;
       } else {
         repeat = BigInt(value);
@@ -67,7 +67,7 @@ if (shout && lowercase) {
   console.error('error: --lowercase and --shout cannot be combined');
   process.exitCode = 1;
 } else if (invalidRepeat) {
-  console.error('error: --repeat needs a whole number of at least 1');
+  console.error('error: --repeat must be a whole decimal number from 1 to 10');
   process.exitCode = 1;
 } else if (invalidPrefix) {
   console.error('error: --prefix needs a value');
