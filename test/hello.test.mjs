@@ -7,6 +7,7 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const command = fileURLToPath(new URL('../bin/hello.mjs', import.meta.url));
+const readme = readFileSync(new URL('../README.md', import.meta.url), 'utf8');
 const reference = readFileSync(new URL('../docs/reference.md', import.meta.url), 'utf8');
 
 function run(args, lang, cwd) {
@@ -111,9 +112,15 @@ test('documents prefix for the standalone command only', () => {
 
 test('documents repeat for the standalone hello command only', () => {
   assert.match(reference, /`node bin\/hello\.mjs`[\s\S]*`--repeat <n>`/);
-  assert.match(reference, /default is `1`[\s\S]*positive whole decimal number/);
+  assert.match(reference, /default is `1`[\s\S]*whole decimal number from\s+`1` through `10`/);
   assert.match(reference, /`node bin\/hello\.mjs --shout --repeat 3 Ada`/);
   assert.match(reference, /not supported by\s+the installed `greet` command/);
+});
+
+test('documents standalone repeat syntax, default, range, and example in the README', () => {
+  assert.match(readme, /`node bin\/hello\.mjs \[name\]`[\s\S]*`--repeat <n>`/);
+  assert.match(readme, /default is `1`[\s\S]*whole decimal number from\s+`1` through `10`/);
+  assert.match(readme, /`node bin\/hello\.mjs --repeat 3 Ada`/);
 });
 
 test('documents lowercase for the standalone hello command', () => {
