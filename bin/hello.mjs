@@ -8,6 +8,8 @@ const args = [];
 const optionNames = [];
 let invalidName = false;
 let count = false;
+let quiet = false;
+const outputLines = [];
 let greetedLines = 0;
 let shout = false;
 let lowercase = false;
@@ -51,6 +53,8 @@ for (let index = 0; index < rawArgs.length; index += 1) {
     }
   } else if (arg === '--count') {
     count = true;
+  } else if (arg === '--quiet') {
+    quiet = true;
   } else if (arg === '--shout') {
     shout = true;
   } else if (arg === '--lowercase') {
@@ -101,9 +105,9 @@ const printGreeting = name => {
   for (let printed = 0n; printed < repeat; printed += 1n) {
     greetedLines += 1;
     if (shouldUseColor) {
-      console.log(`\u001b[31m${output}\u001b[0m`);
+      outputLines.push(`\u001b[31m${output}\u001b[0m`);
     } else {
-      console.log(output);
+      outputLines.push(output);
     }
   }
 };
@@ -150,5 +154,9 @@ if (shout && lowercase) {
 }
 
 if (count && process.exitCode === undefined) {
-  console.log(`Greeted ${greetedLines} time(s).`);
+  outputLines.push(`Greeted ${greetedLines} time(s).`);
+}
+
+if (outputLines.length > 0) {
+  process.stdout.write(outputLines.join('\n') + (quiet ? '' : '\n'));
 }

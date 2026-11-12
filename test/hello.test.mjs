@@ -745,3 +745,26 @@ test('reference documents --name', () => {
   assert.match(reference, /positional names are greeted first/);
   assert.match(reference, /exits with status 1/);
 });
+
+test('--quiet drops only the final trailing newline', () => {
+  const cases = [
+    [['Ada', '--quiet'], 'Hello, Ada!'],
+    [['Ada', 'Linus', '--quiet'], 'Hello, Ada!\nHello, Linus!'],
+    [['--repeat', '2', 'Ada', '--quiet'], 'Hello, Ada!\nHello, Ada!'],
+    [['Ada', '--count', '--quiet'], 'Hello, Ada!\nGreeted 1 time(s).'],
+  ];
+  for (const [args, expected] of cases) {
+    const result = run(args);
+    assert.equal(result.status, 0);
+    assert.equal(result.stdout, expected);
+  }
+  const bare = run(['--quiet']);
+  assert.equal(bare.status, 0);
+  assert.equal(bare.stdout, run([]).stdout.replace(/\n$/, ''));
+  assert.equal(run(['Ada']).stdout, 'Hello, Ada!\n');
+});
+
+test('reference documents --quiet', () => {
+  assert.match(reference, /--quiet/);
+  assert.match(reference, /final trailing\s+newline/);
+});
