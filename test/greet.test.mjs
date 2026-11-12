@@ -108,12 +108,35 @@ test('rejects an unknown subcommand with a usage message', () => {
   assert.match(result.stderr, /^Usage: greet farewell \[name\]\n$/);
 });
 
-test('does not add standalone hello options as greet commands', () => {
-  const result = run(['--repeat', '2', 'Ada']);
+test('prints usage to stdout with --help and -h', () => {
+  const help = run(['--help']);
+  const short = run(['-h']);
 
-  assert.equal(result.status, 2);
-  assert.equal(result.stdout, '');
-  assert.equal(result.stderr, 'Usage: greet farewell [name]\n');
+  assert.equal(help.status, 0);
+  assert.match(help.stdout, /^Usage: greet/);
+  assert.equal(help.stderr, '');
+  assert.equal(short.status, 0);
+  assert.equal(short.stdout, help.stdout);
+  assert.equal(short.stderr, '');
+});
+
+test('usage text has one line per supported option', () => {
+  const lines = run(['--help']).stdout.split('\n');
+
+  for (const option of ['--help, -h', '--version', 'farewell [name]', 'session [name]']) {
+    assert.equal(lines.slice(1).filter((line) => line.trim().startsWith(option)).length, 1, option);
+  }
+});
+
+test('unknown options print usage to stderr and exit 1', () => {
+  const help = run(['--help']);
+  for (const args of [['--bogus'], ['--repeat', '2', 'Ada'], ['-x']]) {
+    const result = run(args);
+
+    assert.equal(result.status, 1);
+    assert.equal(result.stdout, '');
+    assert.equal(result.stderr, help.stdout);
+  }
 });
 
 test('--version wins over other arguments, wherever it appears', () => {
