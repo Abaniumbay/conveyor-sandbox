@@ -5,6 +5,8 @@ const rawArgs = process.argv.slice(2);
 const rawNameFileIndex = rawArgs.indexOf('--name-file');
 const isNameFileOperand = index => rawNameFileIndex !== -1 && index === rawNameFileIndex + 1;
 const args = [];
+const optionNames = [];
+let invalidName = false;
 let count = false;
 let greetedLines = 0;
 let shout = false;
@@ -38,6 +40,13 @@ for (let index = 0; index < rawArgs.length; index += 1) {
       invalidSuffix = true;
     } else {
       suffix = rawArgs[index + 1];
+      index += 1;
+    }
+  } else if (arg === '--name') {
+    if (index + 1 >= rawArgs.length || isNameFileOperand(index + 1)) {
+      invalidName = true;
+    } else {
+      optionNames.push(rawArgs[index + 1]);
       index += 1;
     }
   } else if (arg === '--count') {
@@ -82,6 +91,7 @@ const unknownOptionIndex = args.findIndex((arg, index) =>
   arg.startsWith('-') && arg !== '--name-file' && !(nameFileIndex !== -1 && index === nameFileIndex + 1),
 );
 const usage = 'Usage: node bin/hello.mjs [name | --name-file <path>] (at most one name source accepted)';
+args.push(...(nameFileIndex === -1 ? optionNames : []));
 const shouldUseColor = colorMode === 'auto' && (process.env.FORCE_TTY === '1' || process.stdout.isTTY);
 const printGreeting = name => {
   const message = greeting(name);
@@ -104,6 +114,9 @@ if (shout && lowercase) {
 } else if (invalidRepeat) {
   console.error('error: --repeat must be a whole decimal number from 1 to 10');
   process.exitCode = 1;
+} else if (invalidName) {
+  console.error(usage);
+  process.exitCode = 1;
 } else if (invalidPrefix) {
   console.error('error: --prefix needs a value');
   process.exitCode = 1;
@@ -116,7 +129,7 @@ if (shout && lowercase) {
 } else if (colorModeError !== null) {
   console.error(`error: unsupported color mode: ${colorModeError}`);
   process.exitCode = 1;
-} else if (duplicateRepeat || unknownOptionIndex !== -1 || (nameFileIndex !== -1 && (args.length !== 2 || nameFileIndex !== 0))) {
+} else if (duplicateRepeat || unknownOptionIndex !== -1 || (nameFileIndex !== -1 && optionNames.length > 0) || (nameFileIndex !== -1 && (args.length !== 2 || nameFileIndex !== 0))) {
   console.error(usage);
   process.exitCode = 2;
 } else if (nameFileIndex === 0) {
