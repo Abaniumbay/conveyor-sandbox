@@ -115,3 +115,19 @@ test('does not add standalone hello options as greet commands', () => {
   assert.equal(result.stdout, '');
   assert.equal(result.stderr, 'Usage: greet farewell [name]\n');
 });
+
+test('--version wins over other arguments, wherever it appears', () => {
+  const packageJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
+  for (const args of [['--version', 'farewell', 'Ada'], ['session', 'Ada', '--version'], ['farewell', '--version']]) {
+    const result = run(args);
+    assert.equal(result.status, 0, args.join(' '));
+    assert.equal(result.stdout, `${packageJson.version}\n`);
+    assert.equal(result.stderr, '');
+  }
+});
+
+test('docs/reference.md lists the --version option', () => {
+  const docs = readFileSync(new URL('../docs/reference.md', import.meta.url), 'utf8');
+
+  assert.match(docs, /`greet`[^]*`--version`[^]*prints the package\s+version[^]*exits 0[^]*without greeting/);
+});
