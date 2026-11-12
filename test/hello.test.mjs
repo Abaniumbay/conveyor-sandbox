@@ -653,3 +653,51 @@ test('documents the multi-name form in the reference', () => {
   assert.match(reference, /node bin\/hello\.mjs Ada Linus/);
   assert.match(reference, /every name/i);
 });
+
+test('--count prints the greeting then the count line', () => {
+  const result = run(['Ada', '--count']);
+  assert.equal(result.status, 0);
+  assert.equal(result.stdout, 'Hello, Ada!\nGreeted 1 time(s).\n');
+});
+
+test('--count counts names times repeat', () => {
+  const result = run(['Ada', 'Linus', '--repeat', '2', '--count']);
+  assert.equal(result.status, 0);
+  assert.equal(result.stdout, 'Hello, Ada!\nHello, Ada!\nHello, Linus!\nHello, Linus!\nGreeted 4 time(s).\n');
+});
+
+test('--count with no name counts the default greeting', () => {
+  const plain = run([]).stdout;
+  const result = run(['--count']);
+  assert.equal(result.stdout, `${plain}Greeted 1 time(s).\n`);
+});
+
+test('--count line stays plain under --color auto', () => {
+  const result = run(['Ada', '--color', 'auto', '--count'], undefined, undefined, true);
+  assert.equal(result.stdout, '\u001b[31mHello, Ada!\u001b[0m\nGreeted 1 time(s).\n');
+});
+
+test('output without --count has no Greeted line', () => {
+  for (const args of [['Ada'], ['Ada', 'Linus'], ['Ada', '--repeat', '2']]) {
+    const result = run(args);
+    assert.equal(result.status, 0);
+    assert.ok(!result.stdout.includes('Greeted'));
+  }
+  assert.equal(run(['Ada', 'Linus', '--repeat', '2']).stdout, 'Hello, Ada!\nHello, Ada!\nHello, Linus!\nHello, Linus!\n');
+});
+
+test('--count prints no Greeted line when the invocation fails', () => {
+  const repeat = run(['--repeat', '0', '--count']);
+  assert.equal(repeat.status, 1);
+  assert.equal(repeat.stdout, '');
+  assert.equal(repeat.stderr, 'error: --repeat must be a whole decimal number from 1 to 10\n');
+  const unknown = run(['--bogus', '--count']);
+  assert.equal(unknown.status, 2);
+  assert.equal(unknown.stdout, '');
+});
+
+test('reference documents --count', () => {
+  assert.match(reference, /--count/);
+  assert.match(reference, /Greeted N time\(s\)\./);
+  assert.match(reference, /node bin\/hello\.mjs Ada --count/);
+});

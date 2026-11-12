@@ -5,6 +5,8 @@ const rawArgs = process.argv.slice(2);
 const rawNameFileIndex = rawArgs.indexOf('--name-file');
 const isNameFileOperand = index => rawNameFileIndex !== -1 && index === rawNameFileIndex + 1;
 const args = [];
+let count = false;
+let greetedLines = 0;
 let shout = false;
 let lowercase = false;
 let prefix;
@@ -38,6 +40,8 @@ for (let index = 0; index < rawArgs.length; index += 1) {
       suffix = rawArgs[index + 1];
       index += 1;
     }
+  } else if (arg === '--count') {
+    count = true;
   } else if (arg === '--shout') {
     shout = true;
   } else if (arg === '--lowercase') {
@@ -84,7 +88,8 @@ const printGreeting = name => {
   const selectedMessage = shout ? message.toUpperCase() : lowercase ? message.toLowerCase() : message;
   const prefixed = prefix === undefined ? selectedMessage : `${prefix} ${selectedMessage}`;
   const output = suffix === undefined ? prefixed : `${prefixed} ${suffix}`;
-  for (let count = 0n; count < repeat; count += 1n) {
+  for (let printed = 0n; printed < repeat; printed += 1n) {
+    greetedLines += 1;
     if (shouldUseColor) {
       console.log(`\u001b[31m${output}\u001b[0m`);
     } else {
@@ -129,4 +134,8 @@ if (shout && lowercase) {
   printGreeting(undefined);
 } else {
   for (const name of args) printGreeting(name);
+}
+
+if (count && process.exitCode === undefined) {
+  console.log(`Greeted ${greetedLines} time(s).`);
 }
