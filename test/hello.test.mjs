@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, openSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import test from 'node:test';
@@ -833,4 +833,11 @@ test('reference documents --stdin', () => {
   assert.match(reference, /Blank and whitespace-only lines are skipped/);
   assert.match(reference, /greeted last/);
   assert.match(reference, /cannot be combined\s+with `--name-file`/);
+});
+
+test('--stdin reports an unreadable standard input and exits 1', () => {
+  const r = spawnSync(process.execPath, [command, '--stdin', '--count'], { encoding: 'utf8', stdio: [openSync(tmpdir(), 'r'), 'pipe', 'pipe'] });
+  assert.equal(r.status, 1);
+  assert.equal(r.stdout, '');
+  assert.match(r.stderr, /cannot read standard input/);
 });

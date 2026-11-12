@@ -152,13 +152,20 @@ if (shout && lowercase) {
   }
 } else if (useStdin) {
   let input = '';
+  let stdinFailed = false;
   try {
     input = readFileSync(0, 'utf8');
-  } catch {
-    input = '';
+  } catch (error) {
+    if (error.code !== 'EOF') {
+      console.error(`Error: cannot read standard input: ${error.message}`);
+      process.exitCode = 1;
+      stdinFailed = true;
+    }
   }
-  const stdinNames = input.split(/\r?\n/).filter(line => line.trim() !== '');
-  for (const name of [...args, ...stdinNames]) printGreeting(name);
+  if (!stdinFailed) {
+    const stdinNames = input.split(/\r?\n/).filter(line => line.trim() !== '');
+    for (const name of [...args, ...stdinNames]) printGreeting(name);
+  }
 } else if (args.length === 0) {
   printGreeting(undefined);
 } else {
