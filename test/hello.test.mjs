@@ -7,6 +7,7 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const command = fileURLToPath(new URL('../bin/hello.mjs', import.meta.url));
+const readme = readFileSync(new URL('../README.md', import.meta.url), 'utf8');
 const reference = readFileSync(new URL('../docs/reference.md', import.meta.url), 'utf8');
 
 function run(args, lang, cwd) {
@@ -111,9 +112,15 @@ test('documents prefix for the standalone command only', () => {
 
 test('documents repeat for the standalone hello command only', () => {
   assert.match(reference, /`node bin\/hello\.mjs`[\s\S]*`--repeat <n>`/);
-  assert.match(reference, /default is `1`[\s\S]*positive whole decimal number/);
+  assert.match(reference, /default is `1`[\s\S]*whole decimal number from\s+`1` through `10`/);
   assert.match(reference, /`node bin\/hello\.mjs --shout --repeat 3 Ada`/);
   assert.match(reference, /not supported by\s+the installed `greet` command/);
+});
+
+test('documents standalone repeat syntax, default, range, and example in the README', () => {
+  assert.match(readme, /`node bin\/hello\.mjs \[name\]`[\s\S]*`--repeat <n>`/);
+  assert.match(readme, /default is `1`[\s\S]*whole decimal number from\s+`1` through `10`/);
+  assert.match(readme, /`node bin\/hello\.mjs --repeat 3 Ada`/);
 });
 
 test('documents lowercase for the standalone hello command', () => {
@@ -180,11 +187,13 @@ test('keeps --lowercase as the operand of --name-file', () => {
 });
 
 test('repeats a supplied greeting the requested number of times', () => {
-  const result = run(['--repeat', '3', 'Ada']);
+  for (let count = 1; count <= 10; count += 1) {
+    const result = run(['--repeat', String(count), 'Ada']);
 
-  assert.equal(result.status, 0);
-  assert.equal(result.stdout, 'Hello, Ada!\nHello, Ada!\nHello, Ada!\n');
-  assert.equal(result.stderr, '');
+    assert.equal(result.status, 0);
+    assert.equal(result.stdout, 'Hello, Ada!\n'.repeat(count));
+    assert.equal(result.stderr, '');
+  }
 });
 
 test('defaults repeat to one and accepts an explicit repeat count of one', () => {
@@ -198,21 +207,21 @@ test('defaults repeat to one and accepts an explicit repeat count of one', () =>
 });
 
 test('rejects missing and invalid repeat counts without printing a greeting', () => {
-  for (const args of [['--repeat'], ...['0', '-1', '1.5', 'abc'].map(value => ['--repeat', value])]) {
+  for (const args of [['--repeat'], ...['0', '11', '999999999999999999999', '-1', '1.5', 'abc'].map(value => ['--repeat', value])]) {
     const result = run(args);
 
     assert.equal(result.status, 1);
     assert.equal(result.stdout, '');
-    assert.equal(result.stderr, 'error: --repeat needs a whole number of at least 1\n');
+    assert.equal(result.stderr, 'error: --repeat must be a whole decimal number from 1 to 10\n');
   }
 });
 
 test('combines repeat with shout in either option order', () => {
-  for (const args of [['--shout', '--repeat', '2', 'Ada'], ['--repeat', '2', '--shout', 'Ada']]) {
+  for (const args of [['--shout', '--repeat', '3', 'Ada'], ['--repeat', '3', '--shout', 'Ada']]) {
     const result = run(args);
 
     assert.equal(result.status, 0);
-    assert.equal(result.stdout, 'HELLO, ADA!\nHELLO, ADA!\n');
+    assert.equal(result.stdout, 'HELLO, ADA!\n'.repeat(3));
     assert.equal(result.stderr, '');
   }
 });

@@ -6,7 +6,7 @@ implemented by the current greeting command.
 
 The standalone greeting command, `node bin/hello.mjs`, supports
 `--repeat <n>` to print the selected greeting `n` times, one per line. The
-default is `1`; `n` must be a positive whole decimal number. For example,
+default is `1`; `n` must be a whole decimal number from `1` through `10`. For example,
 `node bin/hello.mjs --shout --repeat 3 Ada` prints the uppercase greeting three
 times. This option belongs to the standalone command and is not supported by
 the installed `greet` command.
