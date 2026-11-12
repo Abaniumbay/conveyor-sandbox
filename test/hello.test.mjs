@@ -431,12 +431,12 @@ test('uses Persian for fa and fa_IR.UTF-8 while preserving a supplied name', () 
   }
 });
 
-test('treats --lang fa as two plain names even with Persian LANG', () => {
+test('treats --lang fa as an unknown option even with Persian LANG', () => {
   const result = run(['--lang', 'fa'], 'fa');
 
-  assert.equal(result.status, 0);
-  assert.equal(result.stderr, '');
-  assert.equal(result.stdout.trimEnd().split('\n').length, 2);
+  assert.equal(result.status, 2);
+  assert.equal(result.stdout, '');
+  assert.equal(result.stderr, 'Usage: node bin/hello.mjs [name | --name-file <path>] (at most one name source accepted)\n');
 });
 
 test('shouts the default and supplied English greetings in either argument order', () => {
