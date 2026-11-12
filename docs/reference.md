@@ -22,6 +22,10 @@ belongs to `node bin/hello.mjs` and is not supported by the installed `greet`
 command. Omitting the value prints `error: --prefix needs a value` to stderr
 and exits with status 1.
 
+The installed `greet` command supports `--version`, which prints the package
+version from `package.json` and exits 0 without greeting. It wins over any other
+arguments, wherever it appears.
+
 | Option | Environment variable | Default | Description |
 | --- | --- | --- | --- |
 | `--name` | `HELLO_NAME` | `world` | Who is greeted |

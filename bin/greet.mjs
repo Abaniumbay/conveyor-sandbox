@@ -13,7 +13,7 @@ function farewell(name) {
   return name === undefined ? 'Goodbye!' : `Goodbye, ${name}!`;
 }
 
-if (command === '--version' && args.length === 1) {
+if (args.includes('--version')) {
   console.log(version);
 } else if (!['farewell', 'session'].includes(command) || args.length > 2) {
   console.error(usage);
