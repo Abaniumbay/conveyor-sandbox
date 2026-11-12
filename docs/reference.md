@@ -36,6 +36,14 @@ supplied text after the selected greeting. For example,
 suffix text is not changed by `--shout` or `--lowercase`. Omitting the value
 prints `error: --suffix needs a value` to stderr and exits with status 1.
 
+The standalone command also supports `--count` to print, after the greetings,
+a plain-text line `Greeted N time(s).` where N is the number of greeting lines
+printed. The line is never colored. For example,
+`node bin/hello.mjs Ada --count` prints `Hello, Ada!` and then
+`Greeted 1 time(s).`, and `node bin/hello.mjs Ada Linus --repeat 2 --count`
+ends with `Greeted 4 time(s).`. Without `--count` output is unchanged, and when
+the invocation fails no `Greeted` line is printed.
+
 The installed `greet` command supports `--version`, which prints the package
 version from `package.json` and exits 0 without greeting. It wins over any other
 arguments, wherever it appears.
