@@ -648,3 +648,8 @@ test('--name-file with an extra name still exits 2 with usage', () => {
   assert.equal(r.status, 2);
   assert.match(r.stderr, /^Usage: /);
 });
+
+test('documents the multi-name form in the reference', () => {
+  assert.match(reference, /node bin\/hello\.mjs Ada Linus/);
+  assert.match(reference, /every name/i);
+});
