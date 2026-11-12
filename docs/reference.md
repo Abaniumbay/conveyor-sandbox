@@ -34,6 +34,10 @@ option leaves output uncolored. Omitting the mode operand prints `error: --color
 to stderr and exits with status 1. Unsupported color modes result in
 `error: unsupported color mode: <mode>` and exit with status 1.
 
+For testing and diagnostics, the `FORCE_TTY=1` environment variable overrides
+the TTY check and forces color output even when stdout is piped. This is used
+internally by test suites to verify colored output without requiring a pseudo-terminal.
+
 | Option | Environment variable | Default | Description |
 | --- | --- | --- | --- |
 | `--name` | `HELLO_NAME` | `world` | Who is greeted |
