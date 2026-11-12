@@ -618,7 +618,7 @@ test('documents suffix for the standalone command', () => {
   assert.match(reference, /error: --suffix needs a value/);
 });
 
-const runMulti = (...a) => spawnSync(process.execPath, [command, ...a], { encoding: 'utf8' });
+const runMulti = (...a) => run(a);
 
 test('multiple names print one greeting per name in order', () => {
   const r = runMulti('Ada', 'Linus');
