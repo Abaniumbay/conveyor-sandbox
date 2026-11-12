@@ -701,3 +701,47 @@ test('reference documents --count', () => {
   assert.match(reference, /Greeted N time\(s\)\./);
   assert.match(reference, /node bin\/hello\.mjs Ada --count/);
 });
+
+test('--name gives a name like the positional', () => {
+  const result = run(['--name', 'Ada']);
+  assert.equal(result.status, 0);
+  assert.equal(result.stdout, 'Hello, Ada!\n');
+  assert.equal(result.stdout, run(['Ada']).stdout);
+});
+
+test('--name is repeatable and ordered', () => {
+  const result = run(['--name', 'Ada', '--name', 'Linus']);
+  assert.equal(result.status, 0);
+  assert.equal(result.stdout, 'Hello, Ada!\nHello, Linus!\n');
+  assert.equal(result.stdout, run(['Ada', 'Linus']).stdout);
+});
+
+test('--name values come after positional names', () => {
+  const result = run(['Grace', '--name', 'Ada', 'Linus', '--name', 'Alan']);
+  assert.equal(result.status, 0);
+  assert.equal(result.stdout, 'Hello, Grace!\nHello, Linus!\nHello, Ada!\nHello, Alan!\n');
+});
+
+test('--name without a value prints usage and exits 1', () => {
+  for (const args of [['--name'], ['Ada', '--name']]) {
+    const result = run(args);
+    assert.equal(result.status, 1);
+    assert.equal(result.stdout, '');
+    assert.match(result.stderr, /^Usage:/);
+  }
+});
+
+test('--name combines with other options', () => {
+  const shout = run(['--shout', '--repeat', '2', '--name', 'Ada']);
+  assert.equal(shout.status, 0);
+  assert.equal(shout.stdout, 'HELLO, ADA!\nHELLO, ADA!\n');
+  const count = run(['--name', 'Ada', '--count']);
+  assert.equal(count.status, 0);
+  assert.equal(count.stdout, 'Hello, Ada!\nGreeted 1 time(s).\n');
+});
+
+test('reference documents --name', () => {
+  assert.match(reference, /--name <value>/);
+  assert.match(reference, /positional names are greeted first/);
+  assert.match(reference, /exits with status 1/);
+});

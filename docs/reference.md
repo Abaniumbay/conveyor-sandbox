@@ -44,6 +44,12 @@ printed. The line is never colored. For example,
 ends with `Greeted 4 time(s).`. Without `--count` output is unchanged, and when
 the invocation fails no `Greeted` line is printed.
 
+The standalone command also supports `--name <value>`, repeatable, as another
+way to give names: `node bin/hello.mjs --name Ada --name Linus` prints the same
+as `node bin/hello.mjs Ada Linus`. When mixed with positional names, all
+positional names are greeted first, then the `--name` values in the order given.
+Omitting the value prints a `Usage:` message to stderr and exits with status 1.
+
 The installed `greet` command supports `--version`, which prints the package
 version from `package.json` and exits 0 without greeting. It wins over any other
 arguments, wherever it appears.
