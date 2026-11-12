@@ -13,6 +13,9 @@ let repeat = 1n;
 let repeatSpecified = false;
 let invalidRepeat = false;
 let duplicateRepeat = false;
+let colorMode;
+let colorModeMissing = false;
+let colorModeError = null;
 
 for (let index = 0; index < rawArgs.length; index += 1) {
   const arg = rawArgs[index];
@@ -44,6 +47,18 @@ for (let index = 0; index < rawArgs.length; index += 1) {
         repeat = BigInt(value);
       }
     }
+  } else if (arg === '--color') {
+    if (index + 1 >= rawArgs.length || isNameFileOperand(index + 1)) {
+      colorModeMissing = true;
+    } else {
+      const mode = rawArgs[index + 1];
+      index += 1;
+      if (mode === 'auto') {
+        colorMode = 'auto';
+      } else {
+        colorModeError = mode;
+      }
+    }
   } else {
     args.push(arg);
   }
@@ -54,12 +69,17 @@ const unknownOptionIndex = args.findIndex((arg, index) =>
   arg.startsWith('-') && arg !== '--name-file' && !(nameFileIndex !== -1 && index === nameFileIndex + 1),
 );
 const usage = 'Usage: node bin/hello.mjs [name | --name-file <path>] (at most one name source accepted)';
+const shouldUseColor = colorMode === 'auto' && (process.env.FORCE_TTY === '1' || process.stdout.isTTY);
 const printGreeting = name => {
   const message = greeting(name);
   const selectedMessage = shout ? message.toUpperCase() : lowercase ? message.toLowerCase() : message;
   const output = prefix === undefined ? selectedMessage : `${prefix} ${selectedMessage}`;
   for (let count = 0n; count < repeat; count += 1n) {
-    console.log(output);
+    if (shouldUseColor) {
+      console.log(`\u001b[31m${output}\u001b[0m`);
+    } else {
+      console.log(output);
+    }
   }
 };
 
@@ -71,6 +91,12 @@ if (shout && lowercase) {
   process.exitCode = 1;
 } else if (invalidPrefix) {
   console.error('error: --prefix needs a value');
+  process.exitCode = 1;
+} else if (colorModeMissing) {
+  console.error('error: --color needs a mode');
+  process.exitCode = 1;
+} else if (colorModeError !== null) {
+  console.error(`error: unsupported color mode: ${colorModeError}`);
   process.exitCode = 1;
 } else if (duplicateRepeat || unknownOptionIndex !== -1 || (nameFileIndex !== -1 && (args.length !== 2 || nameFileIndex !== 0))) {
   console.error(usage);
