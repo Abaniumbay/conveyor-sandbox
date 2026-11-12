@@ -353,12 +353,12 @@ test('uses the locale default for empty and whitespace-only first lines from --n
   }
 });
 
-test('rejects more than one name with a usage message', () => {
+test('accepts more than one name without a usage message', () => {
   const result = run(['Ada', 'Grace']);
 
-  assert.equal(result.status, 2);
-  assert.equal(result.stdout, '');
-  assert.match(result.stderr, /^Usage: node bin\/hello\.mjs \[name \| --name-file <path>\] \(at most one name source accepted\)\n$/);
+  assert.equal(result.status, 0);
+  assert.equal(result.stdout, 'Hello, Ada!\nHello, Grace!\n');
+  assert.equal(result.stderr, '');
 });
 
 test('rejects unknown long and short options before or after a name', () => {
@@ -431,7 +431,7 @@ test('uses Persian for fa and fa_IR.UTF-8 while preserving a supplied name', () 
   }
 });
 
-test('treats --lang fa as an extra argument even with Persian LANG', () => {
+test('treats --lang fa as an unknown option even with Persian LANG', () => {
   const result = run(['--lang', 'fa'], 'fa');
 
   assert.equal(result.status, 2);
@@ -487,7 +487,7 @@ test('shouts a name-file greeting and preserves name-file errors', () => {
 test('shout does not change positional-name or unknown-option usage errors', () => {
   const usage = 'Usage: node bin/hello.mjs [name | --name-file <path>] (at most one name source accepted)\n';
 
-  for (const args of [['--shout', 'Ada', 'Grace'], ['Ada', 'Grace', '--shout'], ['--shout', '--unknown']]) {
+  for (const args of [['--shout', '--unknown']]) {
     const result = run(args);
 
     assert.equal(result.status, 2, `status for ${args.join(' ')}`);
@@ -616,4 +616,40 @@ test('documents suffix for the standalone command', () => {
   assert.match(reference, /`node bin\/hello\.mjs`[\s\S]*`--suffix <text>`/);
   assert.match(reference, /after the selected greeting/);
   assert.match(reference, /error: --suffix needs a value/);
+});
+
+const runMulti = (...a) => run(a);
+
+test('multiple names print one greeting per name in order', () => {
+  const r = runMulti('Ada', 'Linus');
+  assert.equal(r.status, 0);
+  assert.equal(r.stdout, 'Hello, Ada!\nHello, Linus!\n');
+});
+
+test('single name and no name are unchanged', () => {
+  assert.equal(runMulti('Ada').stdout, 'Hello, Ada!\n');
+  assert.equal(runMulti().stdout, 'Hello, world!\n');
+});
+
+test('multiple names: options apply to every name', () => {
+  assert.equal(runMulti('--shout', 'Ada', 'Linus').stdout, 'HELLO, ADA!\nHELLO, LINUS!\n');
+  assert.equal(runMulti('--lowercase', 'Ada', 'Linus').stdout, 'hello, ada!\nhello, linus!\n');
+  assert.equal(runMulti('--prefix', 'Hey', 'Ada', 'Linus').stdout, 'Hey Hello, Ada!\nHey Hello, Linus!\n');
+  assert.equal(runMulti('--suffix', 'Bye', 'Ada', 'Linus').stdout, 'Hello, Ada! Bye\nHello, Linus! Bye\n');
+});
+
+test('multiple names with --repeat repeat each name consecutively', () => {
+  assert.equal(runMulti('--repeat', '2', 'Ada', 'Linus').stdout,
+    'Hello, Ada!\nHello, Ada!\nHello, Linus!\nHello, Linus!\n');
+});
+
+test('--name-file with an extra name still exits 2 with usage', () => {
+  const r = runMulti('--name-file', 'x.txt', 'Ada');
+  assert.equal(r.status, 2);
+  assert.match(r.stderr, /^Usage: /);
+});
+
+test('documents the multi-name form in the reference', () => {
+  assert.match(reference, /node bin\/hello\.mjs Ada Linus/);
+  assert.match(reference, /every name/i);
 });
