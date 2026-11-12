@@ -14,6 +14,7 @@ let repeatSpecified = false;
 let invalidRepeat = false;
 let duplicateRepeat = false;
 let colorMode;
+let colorModeMissing = false;
 let colorModeError = null;
 
 for (let index = 0; index < rawArgs.length; index += 1) {
@@ -48,7 +49,7 @@ for (let index = 0; index < rawArgs.length; index += 1) {
     }
   } else if (arg === '--color') {
     if (index + 1 >= rawArgs.length || isNameFileOperand(index + 1)) {
-      colorModeError = 'missing';
+      colorModeMissing = true;
     } else {
       const mode = rawArgs[index + 1];
       index += 1;
@@ -91,7 +92,7 @@ if (shout && lowercase) {
 } else if (invalidPrefix) {
   console.error('error: --prefix needs a value');
   process.exitCode = 1;
-} else if (colorModeError === 'missing') {
+} else if (colorModeMissing) {
   console.error('error: --color needs a mode');
   process.exitCode = 1;
 } else if (colorModeError !== null) {

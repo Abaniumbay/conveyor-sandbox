@@ -508,7 +508,7 @@ test('does not color greeting with --color auto when stdout is piped', () => {
 });
 
 test('does not color greeting by default', () => {
-  const result = run(['Ada']);
+  const result = run(['Ada'], undefined, undefined, true);
 
   assert.equal(result.status, 0);
   assert.equal(result.stdout, 'Hello, Ada!\n');
@@ -537,7 +537,7 @@ test('rejects --color without a mode operand', () => {
 });
 
 test('rejects --color with an unsupported mode', () => {
-  for (const mode of ['always', 'never', 'invalid']) {
+  for (const mode of ['always', 'never', 'invalid', 'missing']) {
     const result = run(['--color', mode]);
 
     assert.equal(result.status, 1, `status for mode ${mode}`);
