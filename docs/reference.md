@@ -11,6 +11,14 @@ default is `1`; `n` must be a whole decimal number from `1` through `10`. For ex
 times. This option belongs to the standalone command and is not supported by
 the installed `greet` command.
 
+The standalone command also accepts several names as separate arguments and
+prints one greeting line per name, in the order given. For example,
+`node bin/hello.mjs Ada Linus` prints `Hello, Ada!` and then `Hello, Linus!`.
+With no name the default greeting is unchanged. Options such as `--shout`,
+`--lowercase`, `--prefix`, `--suffix` and `--repeat` apply to every name; with
+`--repeat 2 Ada Linus`, Ada is printed twice before Linus is printed twice.
+`--name-file` cannot be combined with additional names.
+
 The standalone command also supports `--lowercase` to print the complete
 selected greeting in lower case. For example, `node bin/hello.mjs --lowercase Ada`
 prints `hello, ada!`. `--lowercase` cannot be combined with `--shout`.

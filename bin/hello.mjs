@@ -114,9 +114,6 @@ if (shout && lowercase) {
 } else if (duplicateRepeat || unknownOptionIndex !== -1 || (nameFileIndex !== -1 && (args.length !== 2 || nameFileIndex !== 0))) {
   console.error(usage);
   process.exitCode = 2;
-} else if (nameFileIndex === -1 && args.length > 1) {
-  console.error(usage);
-  process.exitCode = 2;
 } else if (nameFileIndex === 0) {
   const path = args[1];
 
@@ -128,6 +125,8 @@ if (shout && lowercase) {
     console.error(`Error: cannot read name file ${path}: ${error.message}`);
     process.exitCode = 1;
   }
+} else if (args.length === 0) {
+  printGreeting(undefined);
 } else {
-  printGreeting(args[0]);
+  for (const name of args) printGreeting(name);
 }
