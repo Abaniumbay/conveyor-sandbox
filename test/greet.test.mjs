@@ -125,3 +125,9 @@ test('--version wins over other arguments, wherever it appears', () => {
     assert.equal(result.stderr, '');
   }
 });
+
+test('docs/reference.md lists the --version option', () => {
+  const docs = readFileSync(new URL('../docs/reference.md', import.meta.url), 'utf8');
+
+  assert.match(docs, /`greet`[^]*`--version`[^]*prints the package\s+version[^]*exits 0[^]*without greeting/);
+});
