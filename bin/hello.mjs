@@ -68,7 +68,7 @@ const unknownOptionIndex = args.findIndex((arg, index) =>
   arg.startsWith('-') && arg !== '--name-file' && !(nameFileIndex !== -1 && index === nameFileIndex + 1),
 );
 const usage = 'Usage: node bin/hello.mjs [name | --name-file <path>] (at most one name source accepted)';
-const shouldUseColor = colorMode === 'auto' && process.stdout.isTTY;
+const shouldUseColor = colorMode === 'auto' && (process.env.FORCE_TTY === '1' || process.stdout.isTTY);
 const printGreeting = name => {
   const message = greeting(name);
   const selectedMessage = shout ? message.toUpperCase() : lowercase ? message.toLowerCase() : message;
@@ -94,7 +94,7 @@ if (shout && lowercase) {
 } else if (colorModeError === 'missing') {
   console.error('error: --color needs a mode');
   process.exitCode = 1;
-} else if (colorModeError) {
+} else if (colorModeError !== null) {
   console.error(`error: unsupported color mode: ${colorModeError}`);
   process.exitCode = 1;
 } else if (duplicateRepeat || unknownOptionIndex !== -1 || (nameFileIndex !== -1 && (args.length !== 2 || nameFileIndex !== 0))) {

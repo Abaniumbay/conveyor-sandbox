@@ -10,12 +10,15 @@ const command = fileURLToPath(new URL('../bin/hello.mjs', import.meta.url));
 const readme = readFileSync(new URL('../README.md', import.meta.url), 'utf8');
 const reference = readFileSync(new URL('../docs/reference.md', import.meta.url), 'utf8');
 
-function run(args, lang, cwd) {
+function run(args, lang, cwd, forceTty) {
   const env = { ...process.env };
   if (lang === undefined) {
     delete env.LANG;
   } else {
     env.LANG = lang;
+  }
+  if (forceTty) {
+    env.FORCE_TTY = '1';
   }
 
   return spawnSync(process.execPath, [command, ...args], { encoding: 'utf8', env, cwd });
@@ -543,6 +546,14 @@ test('rejects --color with an unsupported mode', () => {
   }
 });
 
+test('rejects --color with an empty mode', () => {
+  const result = run(['--color', '']);
+
+  assert.equal(result.status, 1);
+  assert.equal(result.stdout, '');
+  assert.equal(result.stderr, 'error: unsupported color mode: \n');
+});
+
 test('treats a hyphen-prefixed --color operand as a path when used with --name-file', () => {
   const directory = mkdtempSync(join(tmpdir(), 'hello-color-'));
 
@@ -559,12 +570,10 @@ test('treats a hyphen-prefixed --color operand as a path when used with --name-f
 });
 
 test('colors greeting with --color auto on a terminal', () => {
-  const result = run(['--color', 'auto', 'Ada']);
+  const result = run(['--color', 'auto', 'Ada'], undefined, undefined, true);
 
   assert.equal(result.status, 0);
-  // When stdout.isTTY is false (as in test environment with piped stdio),
-  // the output should be plain. On a real terminal, this would include ANSI codes.
-  assert.match(result.stdout, /Hello, Ada!/);
+  assert.equal(result.stdout, '\u001b[31mHello, Ada!\u001b[0m\n');
   assert.equal(result.stderr, '');
 });
 
@@ -576,9 +585,9 @@ test('documents --color auto for the standalone command only', () => {
 });
 
 test('colors each line with --prefix --shout --repeat --color auto on a terminal', () => {
-  const result = run(['--prefix', 'Hey', '--shout', '--repeat', '2', '--color', 'auto', 'Ada']);
+  const result = run(['--prefix', 'Hey', '--shout', '--repeat', '2', '--color', 'auto', 'Ada'], undefined, undefined, true);
 
   assert.equal(result.status, 0);
-  assert.equal(result.stdout, 'Hey HELLO, ADA!\nHey HELLO, ADA!\n');
+  assert.equal(result.stdout, '\u001b[31mHey HELLO, ADA!\u001b[0m\n\u001b[31mHey HELLO, ADA!\u001b[0m\n');
   assert.equal(result.stderr, '');
 });
