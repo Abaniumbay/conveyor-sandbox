@@ -492,3 +492,75 @@ test('shout does not change positional-name or unknown-option usage errors', () 
     assert.equal(result.stderr, usage, `stderr for ${args.join(' ')}`);
   }
 });
+
+test('does not color greeting with --color auto when stdout is piped', () => {
+  const result = spawnSync(process.execPath, [command, '--color', 'auto', 'Ada'], {
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+
+  assert.equal(result.status, 0);
+  assert.equal(result.stdout, 'Hello, Ada!\n');
+  assert.equal(result.stderr, '');
+});
+
+test('does not color greeting by default', () => {
+  const result = run(['Ada']);
+
+  assert.equal(result.status, 0);
+  assert.equal(result.stdout, 'Hello, Ada!\n');
+  assert.equal(result.stderr, '');
+});
+
+test('accepts --color auto flag in any position when piped', () => {
+  for (const args of [['--color', 'auto', 'Ada'], ['Ada', '--color', 'auto']]) {
+    const result = spawnSync(process.execPath, [command, ...args], {
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+
+    assert.equal(result.status, 0, `status for ${args.join(' ')}`);
+    assert.equal(result.stdout, 'Hello, Ada!\n', `output for ${args.join(' ')}`);
+    assert.equal(result.stderr, '', `stderr for ${args.join(' ')}`);
+  }
+});
+
+test('rejects --color without a mode operand', () => {
+  const result = run(['--color']);
+
+  assert.equal(result.status, 1);
+  assert.equal(result.stdout, '');
+  assert.equal(result.stderr, 'error: --color needs a mode\n');
+});
+
+test('rejects --color with an unsupported mode', () => {
+  for (const mode of ['always', 'never', 'invalid']) {
+    const result = run(['--color', mode]);
+
+    assert.equal(result.status, 1, `status for mode ${mode}`);
+    assert.equal(result.stdout, '', `stdout for mode ${mode}`);
+    assert.equal(result.stderr, `error: unsupported color mode: ${mode}\n`, `stderr for mode ${mode}`);
+  }
+});
+
+test('treats a hyphen-prefixed --color operand as a path when used with --name-file', () => {
+  const directory = mkdtempSync(join(tmpdir(), 'hello-color-'));
+
+  try {
+    writeFileSync(join(directory, '--color'), 'Ada\n');
+    const result = run(['--name-file', '--color'], undefined, directory);
+
+    assert.equal(result.status, 0);
+    assert.equal(result.stdout, 'Hello, Ada!\n');
+    assert.equal(result.stderr, '');
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
+});
+
+test('documents --color auto for the standalone command only', () => {
+  assert.match(reference, /`node bin\/hello\.mjs`[\s\S]*`--color auto`/);
+  assert.match(reference, /terminal-only behavior/);
+  assert.match(reference, /error: --color needs a mode/);
+  assert.match(reference, /unsupported color mode/);
+});
