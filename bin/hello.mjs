@@ -9,6 +9,7 @@ const optionNames = [];
 let invalidName = false;
 let count = false;
 let quiet = false;
+let useStdin = false;
 const outputLines = [];
 let greetedLines = 0;
 let shout = false;
@@ -53,6 +54,8 @@ for (let index = 0; index < rawArgs.length; index += 1) {
     }
   } else if (arg === '--count') {
     count = true;
+  } else if (arg === '--stdin') {
+    useStdin = true;
   } else if (arg === '--quiet') {
     quiet = true;
   } else if (arg === '--shout') {
@@ -133,7 +136,7 @@ if (shout && lowercase) {
 } else if (colorModeError !== null) {
   console.error(`error: unsupported color mode: ${colorModeError}`);
   process.exitCode = 1;
-} else if (duplicateRepeat || unknownOptionIndex !== -1 || (nameFileIndex !== -1 && optionNames.length > 0) || (nameFileIndex !== -1 && (args.length !== 2 || nameFileIndex !== 0))) {
+} else if (duplicateRepeat || unknownOptionIndex !== -1 || (nameFileIndex !== -1 && (optionNames.length > 0 || useStdin)) || (nameFileIndex !== -1 && (args.length !== 2 || nameFileIndex !== 0))) {
   console.error(usage);
   process.exitCode = 2;
 } else if (nameFileIndex === 0) {
@@ -146,6 +149,22 @@ if (shout && lowercase) {
   } catch (error) {
     console.error(`Error: cannot read name file ${path}: ${error.message}`);
     process.exitCode = 1;
+  }
+} else if (useStdin) {
+  let input = '';
+  let stdinFailed = false;
+  try {
+    input = readFileSync(0, 'utf8');
+  } catch (error) {
+    if (error.code !== 'EOF') {
+      console.error(`Error: cannot read standard input: ${error.message}`);
+      process.exitCode = 1;
+      stdinFailed = true;
+    }
+  }
+  if (!stdinFailed) {
+    const stdinNames = input.split(/\r?\n/).filter(line => line.trim() !== '');
+    for (const name of [...args, ...stdinNames]) printGreeting(name);
   }
 } else if (args.length === 0) {
   printGreeting(undefined);

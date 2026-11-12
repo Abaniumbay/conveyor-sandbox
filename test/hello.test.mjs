@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, openSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import test from 'node:test';
@@ -767,4 +767,77 @@ test('--quiet drops only the final trailing newline', () => {
 test('reference documents --quiet', () => {
   assert.match(reference, /--quiet/);
   assert.match(reference, /final trailing\s+newline/);
+});
+
+function runStdin(args, input) {
+  return spawnSync(process.execPath, [command, ...args], { encoding: 'utf8', input });
+}
+
+test('--stdin greets each stdin name', () => {
+  const r = runStdin(['--stdin'], 'Ada\nLinus\n');
+  assert.equal(r.stdout, 'Hello, Ada!\nHello, Linus!\n');
+  assert.equal(r.status, 0);
+});
+
+test('--stdin skips blank and whitespace-only lines', () => {
+  assert.equal(runStdin(['--stdin'], '\nAda\n   \n\t\nLinus\n\n').stdout, 'Hello, Ada!\nHello, Linus!\n');
+});
+
+test('--stdin handles CRLF and missing final newline', () => {
+  assert.equal(runStdin(['--stdin'], 'Ada\r\nLinus').stdout, 'Hello, Ada!\nHello, Linus!\n');
+});
+
+test('--stdin names come after positional names', () => {
+  assert.equal(runStdin(['--stdin', 'Grace'], 'Ada\n').stdout, 'Hello, Grace!\nHello, Ada!\n');
+});
+
+test('--stdin names come after --name values', () => {
+  assert.equal(runStdin(['--stdin', '--name', 'Grace'], 'Ada\n').stdout, 'Hello, Grace!\nHello, Ada!\n');
+});
+
+test('--stdin orders positional, --name, then stdin', () => {
+  assert.equal(
+    runStdin(['--name', 'Bob', '--stdin', 'Grace'], 'Ada\n').stdout,
+    'Hello, Grace!\nHello, Bob!\nHello, Ada!\n',
+  );
+});
+
+test('--stdin with empty input prints nothing and exits 0', () => {
+  for (const input of ['', '\n  \n']) {
+    const r = runStdin(['--stdin'], input);
+    assert.equal(r.stdout, '');
+    assert.equal(r.status, 0);
+  }
+});
+
+test('options apply to stdin names', () => {
+  const r = runStdin(['--stdin', '--repeat', '2', '--count', '--shout'], 'Ada\nLinus\n');
+  assert.equal(r.stdout, 'HELLO, ADA!\nHELLO, ADA!\nHELLO, LINUS!\nHELLO, LINUS!\nGreeted 4 time(s).\n');
+});
+
+test('--stdin with --name-file prints usage and exits 2', () => {
+  const r = runStdin(['--stdin', '--name-file', 'x.txt'], 'Ada\n');
+  assert.equal(r.status, 2);
+  assert.match(r.stderr, /^Usage:/);
+  assert.equal(r.stdout, '');
+});
+
+test('without --stdin, stdin is ignored', () => {
+  assert.equal(runStdin([], 'Ada\n').stdout, 'Hello, world!\n');
+  assert.equal(runStdin(['Linus'], 'Ada\n').stdout, 'Hello, Linus!\n');
+});
+
+test('reference documents --stdin', () => {
+  assert.match(reference, /`--stdin`/);
+  assert.match(reference, /one per line/);
+  assert.match(reference, /Blank and whitespace-only lines are skipped/);
+  assert.match(reference, /greeted last/);
+  assert.match(reference, /cannot be combined\s+with `--name-file`/);
+});
+
+test('--stdin reports an unreadable standard input and exits 1', () => {
+  const r = spawnSync(process.execPath, [command, '--stdin', '--count'], { encoding: 'utf8', stdio: [openSync(tmpdir(), 'r'), 'pipe', 'pipe'] });
+  assert.equal(r.status, 1);
+  assert.equal(r.stdout, '');
+  assert.match(r.stderr, /cannot read standard input/);
 });

@@ -57,6 +57,15 @@ as `node bin/hello.mjs Ada Linus`. When mixed with positional names, all
 positional names are greeted first, then the `--name` values in the order given.
 Omitting the value prints a `Usage:` message to stderr and exits with status 1.
 
+The standalone command also supports `--stdin` to read names from standard
+input, one per line. Blank and whitespace-only lines are skipped, and `\r\n`
+line endings and a missing final newline are handled. Standard-input names are
+greeted last, after positional names and `--name` values. If standard input has
+no names and no other names are given, nothing is printed and the exit status is
+0. Without `--stdin`, standard input is not read. `--stdin` cannot be combined
+with `--name-file`; that prints the `Usage:` message to stderr and exits with
+status 2.
+
 The installed `greet` command supports `--version`, which prints the package
 version from `package.json` and exits 0 without greeting. It wins over any other
 arguments, wherever it appears.
