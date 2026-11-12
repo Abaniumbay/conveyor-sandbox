@@ -44,6 +44,13 @@ printed. The line is never colored. For example,
 ends with `Greeted 4 time(s).`. Without `--count` output is unchanged, and when
 the invocation fails no `Greeted` line is printed.
 
+The standalone command also supports `--quiet` to drop only the final trailing
+newline of the output, for embedding in other output. Lines are still separated
+by newlines, so `node bin/hello.mjs Ada Linus --quiet` prints
+`Hello, Ada!\nHello, Linus!` with no newline after the last line; with `--count`
+the `Greeted N time(s).` line is the last line. Without `--quiet` output ends
+with a newline as before.
+
 The standalone command also supports `--name <value>`, repeatable, as another
 way to give names: `node bin/hello.mjs --name Ada --name Linus` prints the same
 as `node bin/hello.mjs Ada Linus`. When mixed with positional names, all
