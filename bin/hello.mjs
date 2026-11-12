@@ -9,6 +9,8 @@ let shout = false;
 let lowercase = false;
 let prefix;
 let invalidPrefix = false;
+let suffix;
+let invalidSuffix = false;
 let repeat = 1n;
 let repeatSpecified = false;
 let invalidRepeat = false;
@@ -27,6 +29,13 @@ for (let index = 0; index < rawArgs.length; index += 1) {
       invalidPrefix = true;
     } else {
       prefix = rawArgs[index + 1];
+      index += 1;
+    }
+  } else if (arg === '--suffix') {
+    if (index + 1 >= rawArgs.length || isNameFileOperand(index + 1)) {
+      invalidSuffix = true;
+    } else {
+      suffix = rawArgs[index + 1];
       index += 1;
     }
   } else if (arg === '--shout') {
@@ -73,7 +82,8 @@ const shouldUseColor = colorMode === 'auto' && (process.env.FORCE_TTY === '1' ||
 const printGreeting = name => {
   const message = greeting(name);
   const selectedMessage = shout ? message.toUpperCase() : lowercase ? message.toLowerCase() : message;
-  const output = prefix === undefined ? selectedMessage : `${prefix} ${selectedMessage}`;
+  const prefixed = prefix === undefined ? selectedMessage : `${prefix} ${selectedMessage}`;
+  const output = suffix === undefined ? prefixed : `${prefixed} ${suffix}`;
   for (let count = 0n; count < repeat; count += 1n) {
     if (shouldUseColor) {
       console.log(`\u001b[31m${output}\u001b[0m`);
@@ -91,6 +101,9 @@ if (shout && lowercase) {
   process.exitCode = 1;
 } else if (invalidPrefix) {
   console.error('error: --prefix needs a value');
+  process.exitCode = 1;
+} else if (invalidSuffix) {
+  console.error('error: --suffix needs a value');
   process.exitCode = 1;
 } else if (colorModeMissing) {
   console.error('error: --color needs a mode');

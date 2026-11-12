@@ -591,3 +591,29 @@ test('colors each line with --prefix --shout --repeat --color auto on a terminal
   assert.equal(result.stdout, '\u001b[31mHey HELLO, ADA!\u001b[0m\n\u001b[31mHey HELLO, ADA!\u001b[0m\n');
   assert.equal(result.stderr, '');
 });
+
+test('appends the suffix after the selected greeting', () => {
+  for (const [args, expected] of [
+    [['--suffix', 'See you', 'Ada'], 'Hello, Ada! See you\n'],
+    [['Ada', '--suffix', 'See you'], 'Hello, Ada! See you\n'],
+    [['--shout', '--suffix', 'See you', 'Ada'], 'HELLO, ADA! See you\n'],
+    [['--prefix', 'Hey', '--suffix', 'Bye', 'Ada'], 'Hey Hello, Ada! Bye\n'],
+  ]) {
+    const result = run(args);
+    assert.equal(result.status, 0);
+    assert.equal(result.stdout, expected);
+  }
+});
+
+test('rejects a missing suffix value without printing a greeting', () => {
+  const result = run(['Ada', '--suffix']);
+  assert.equal(result.status, 1);
+  assert.equal(result.stdout, '');
+  assert.equal(result.stderr, 'error: --suffix needs a value\n');
+});
+
+test('documents suffix for the standalone command', () => {
+  assert.match(reference, /`node bin\/hello\.mjs`[\s\S]*`--suffix <text>`/);
+  assert.match(reference, /after the selected greeting/);
+  assert.match(reference, /error: --suffix needs a value/);
+});

@@ -22,6 +22,12 @@ belongs to `node bin/hello.mjs` and is not supported by the installed `greet`
 command. Omitting the value prints `error: --prefix needs a value` to stderr
 and exits with status 1.
 
+The standalone command also supports `--suffix <text>` to place a space and the
+supplied text after the selected greeting. For example,
+`node bin/hello.mjs --suffix "See you" Ada` prints `Hello, Ada! See you`. The
+suffix text is not changed by `--shout` or `--lowercase`. Omitting the value
+prints `error: --suffix needs a value` to stderr and exits with status 1.
+
 The installed `greet` command supports `--version`, which prints the package
 version from `package.json` and exits 0 without greeting. It wins over any other
 arguments, wherever it appears.
