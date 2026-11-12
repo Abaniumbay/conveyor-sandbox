@@ -5,6 +5,7 @@ Throwaway repository for testing Conveyor changes on the staging instance
 
 | Option | Description | Example |
 | --- | --- | --- |
+| `--help`, `-h` | Print usage and exit 0. Unknown options print it to stderr and exit 1. | `greet --help` prints `Usage: greet [--help \| -h \| --version \| farewell [name] \| session [name]]` followed by one line per option |
 | `--version` | Print the package version. | `greet --version` prints `1.0.0` |
 | `farewell [name]` | Print a goodbye, optionally to a name. | `greet farewell Sara` prints `Goodbye, Sara!` |
 | `session [name]` | Print a greeting followed by a goodbye. | `greet session Sara` prints `Hello, Sara!` then `Goodbye, Sara!` |

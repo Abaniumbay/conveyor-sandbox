@@ -27,3 +27,15 @@ for (const option of options) {
     assert.equal(result.stdout, `${option.output.join('\n')}\n`);
   });
 }
+
+test('README documents --help and -h with a matching example', () => {
+  assert.ok(readme.includes('`--help`, `-h`'), 'option is listed');
+  assert.ok(readme.includes('`greet --help`'), 'example is listed');
+
+  const run = (flag) => spawnSync(process.execPath, [command, flag], { encoding: 'utf8' });
+  const help = run('--help');
+  assert.equal(help.status, 0);
+  assert.equal(run('-h').stdout, help.stdout);
+  const first = help.stdout.split('\n')[0];
+  assert.ok(readme.includes(first.replaceAll('|', '\\|')), 'README shows the real first usage line');
+});
