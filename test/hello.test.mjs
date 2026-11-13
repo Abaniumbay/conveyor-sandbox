@@ -841,3 +841,31 @@ test('--stdin reports an unreadable standard input and exits 1', () => {
   assert.equal(r.stdout, '');
   assert.match(r.stderr, /cannot read standard input/);
 });
+
+test('--upper is an alias of --shout', () => {
+  const pairs = [
+    [['--upper', 'Ada'], ['--shout', 'Ada']],
+    [['Ada', '--upper'], ['Ada', '--shout']],
+    [['--upper', '--repeat', '3', 'Ada'], ['--shout', '--repeat', '3', 'Ada']],
+    [['--upper', '--lowercase', 'Ada'], ['--shout', '--lowercase', 'Ada']],
+  ];
+  for (const [a, b] of pairs) {
+    const x = spawnSync(process.execPath, [command, ...a], { encoding: 'utf8' });
+    const y = spawnSync(process.execPath, [command, ...b], { encoding: 'utf8' });
+    assert.equal(x.stdout, y.stdout);
+    assert.equal(x.status, y.status);
+  }
+  const ok = spawnSync(process.execPath, [command, '--upper', 'Ada'], { encoding: 'utf8' });
+  assert.equal(ok.status, 0);
+  assert.equal(ok.stdout, 'HELLO, ADA!\n');
+  const rep = spawnSync(process.execPath, [command, '--upper', '--repeat', '3', 'Ada'], { encoding: 'utf8' });
+  assert.equal(rep.stdout, 'HELLO, ADA!\n'.repeat(3));
+  const bad = spawnSync(process.execPath, [command, '--upper', '--lowercase', 'Ada'], { encoding: 'utf8' });
+  assert.equal(bad.status, 1);
+  assert.equal(bad.stdout, '');
+  assert.notEqual(bad.stderr, '');
+});
+
+test('reference docs state --upper is an alias of --shout', () => {
+  assert.match(reference, /`--upper` as an alias of `--shout`/);
+});

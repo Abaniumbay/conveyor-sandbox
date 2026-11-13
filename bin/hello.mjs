@@ -58,7 +58,7 @@ for (let index = 0; index < rawArgs.length; index += 1) {
     useStdin = true;
   } else if (arg === '--quiet') {
     quiet = true;
-  } else if (arg === '--shout') {
+  } else if (arg === '--shout' || arg === '--upper') {
     shout = true;
   } else if (arg === '--lowercase') {
     lowercase = true;
