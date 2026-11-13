@@ -869,3 +869,34 @@ test('--upper is an alias of --shout', () => {
 test('reference docs state --upper is an alias of --shout', () => {
   assert.match(reference, /`--upper` as an alias of `--shout`/);
 });
+
+test('--lower is an alias of --lowercase', () => {
+  const run = a => spawnSync(process.execPath, [command, ...a], { encoding: 'utf8' });
+  const pairs = [
+    [['Ada', '--lower'], ['Ada', '--lowercase']],
+    [['--lower', 'Ada'], ['--lowercase', 'Ada']],
+    [['--lower', '--repeat', '2', 'Ada'], ['--lowercase', '--repeat', '2', 'Ada']],
+    [['--lower', '--shout', 'Ada'], ['--lowercase', '--shout', 'Ada']],
+    [['--shout', 'Ada', '--lower'], ['--shout', 'Ada', '--lowercase']],
+    [['--lower', '--upper', 'Ada'], ['--lowercase', '--shout', 'Ada']],
+  ];
+  for (const [a, b] of pairs) {
+    const x = run(a);
+    const y = run(b);
+    assert.equal(x.stdout, y.stdout);
+    assert.equal(x.stderr, y.stderr);
+    assert.equal(x.status, y.status);
+  }
+  const ok = run(['Ada', '--lower']);
+  assert.equal(ok.status, 0);
+  assert.equal(ok.stdout, 'hello, ada!\n');
+  assert.equal(run(['--lower', 'Ada']).stdout, 'hello, ada!\n');
+  assert.equal(run(['--lower', '--repeat', '2', 'Ada']).stdout, 'hello, ada!\n'.repeat(2));
+  const bad = run(['--lower', '--shout', 'Ada']);
+  assert.equal(bad.status, 1);
+  assert.equal(bad.stderr, 'error: --lowercase and --shout cannot be combined\n');
+});
+
+test('reference docs state --lower is an alias of --lowercase', () => {
+  assert.match(reference, /`--lower` as an alias of `--lowercase`/);
+});
