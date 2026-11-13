@@ -19,6 +19,7 @@ let invalidPrefix = false;
 let suffix;
 let invalidSuffix = false;
 let bang = false;
+let polite = false;
 let repeat = 1n;
 let repeatSpecified = false;
 let invalidRepeat = false;
@@ -48,6 +49,8 @@ for (let index = 0; index < rawArgs.length; index += 1) {
     }
   } else if (arg === '--bang') {
     bang = true;
+  } else if (arg === '--polite') {
+    polite = true;
   } else if (arg === '--name') {
     if (index + 1 >= rawArgs.length || isNameFileOperand(index + 1)) {
       invalidName = true;
@@ -104,7 +107,7 @@ const usage = 'Usage: node bin/hello.mjs [name | --name-file <path>] (at most on
 args.push(...(nameFileIndex === -1 ? optionNames : []));
 const shouldUseColor = colorMode === 'auto' && (process.env.FORCE_TTY === '1' || process.stdout.isTTY);
 const printGreeting = name => {
-  const message = greeting(name);
+  const message = greeting(polite && name?.trim() ? `Dear ${name.trim()}` : name);
   const selectedMessage = shout ? message.toUpperCase() : lowercase ? message.toLowerCase() : message;
   const prefixed = prefix === undefined ? selectedMessage : `${prefix} ${selectedMessage}`;
   const effectiveSuffix = bang ? '!' : suffix;
