@@ -15,7 +15,10 @@ Throwaway repository for testing Conveyor changes on the staging instance
 Run `node bin/hello.mjs [name]` to print a greeting. The `--repeat <n>` option
 prints it `n` times. The default is `1`; `n` must be a whole decimal number from
 `1` through `10`. For example, `node bin/hello.mjs --repeat 3 Ada` prints the
-greeting three times.
+greeting three times. The `--shout` option prints the entire selected greeting
+in upper case, not just the supplied name. For example,
+`node bin/hello.mjs --shout Ada` prints `HELLO, ADA!`. Without `--shout` the
+output is unchanged.
 
 ## Running tests
 

@@ -974,3 +974,24 @@ test('reference docs document --polite', () => {
   assert.match(reference, /node bin\/hello\.mjs Ada --polite/);
   assert.match(reference, /Hello, Dear Ada!/);
 });
+
+test('documents --shout in the README and the example matches the real CLI', () => {
+  assert.match(readme, /`--shout`[\s\S]*entire selected greeting[\s\S]*not just the supplied name/);
+  assert.match(readme, /`node bin\/hello\.mjs --shout Ada` prints `HELLO, ADA!`/);
+  const result = run(['--shout', 'Ada'], 'en_US.UTF-8');
+  assert.equal(result.stdout, 'HELLO, ADA!\n');
+});
+
+test('shout and plain greetings are exact under LANG=en_US.UTF-8', () => {
+  for (const [args, expected] of [
+    [['--shout', 'Ada'], 'HELLO, ADA!\n'],
+    [['--shout'], 'HELLO, WORLD!\n'],
+    [['Ada'], 'Hello, Ada!\n'],
+    [[], 'Hello, world!\n'],
+  ]) {
+    const result = run(args, 'en_US.UTF-8');
+    assert.equal(result.status, 0, `status for ${args.join(' ')}`);
+    assert.equal(result.stdout, expected, `stdout for ${args.join(' ')}`);
+    assert.equal(result.stderr, '', `stderr for ${args.join(' ')}`);
+  }
+});
