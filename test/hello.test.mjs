@@ -899,4 +899,42 @@ test('--lower is an alias of --lowercase', () => {
 
 test('reference docs state --lower is an alias of --lowercase', () => {
   assert.match(reference, /`--lower` as an alias of `--lowercase`/);
+
+const runHello = args => spawnSync(process.execPath, [command, ...args], { encoding: 'utf8' });
+
+test('--bang matches --suffix "!" for a name after the flag', () => {
+  const r = runHello(['Ada', '--bang']);
+  assert.equal(r.status, 0);
+  assert.equal(r.stdout, 'Hello, Ada! !\n');
+  assert.equal(r.stdout, runHello(['Ada', '--suffix', '!']).stdout);
+});
+
+test('--bang before the name matches --suffix "!" before the name', () => {
+  const r = runHello(['--bang', 'Ada']);
+  assert.equal(r.status, 0);
+  assert.equal(r.stdout, runHello(['--suffix', '!', 'Ada']).stdout);
+});
+
+test('--bang applies to every name', () => {
+  const r = runHello(['Ada', 'Linus', '--bang']);
+  assert.equal(r.status, 0);
+  assert.equal(r.stdout, 'Hello, Ada! !\nHello, Linus! !\n');
+});
+
+test('--bang before --suffix is an error', () => {
+  const r = runHello(['Ada', '--bang', '--suffix', '?']);
+  assert.equal(r.status, 1);
+  assert.equal(r.stdout, '');
+  assert.notEqual(r.stderr, '');
+});
+
+test('--suffix before --bang is an error', () => {
+  const r = runHello(['Ada', '--suffix', '?', '--bang']);
+  assert.equal(r.status, 1);
+  assert.equal(r.stdout, '');
+  assert.notEqual(r.stderr, '');
+});
+
+test('reference docs state --bang is an alias for --suffix "!"', () => {
+  assert.match(reference, /`--bang`[^.]*alias[^.]*`--suffix "!"`/s);
 });
