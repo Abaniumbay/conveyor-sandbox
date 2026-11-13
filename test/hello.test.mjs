@@ -939,3 +939,38 @@ test('--suffix before --bang is an error', () => {
 test('reference docs state --bang is an alias for --suffix "!"', () => {
   assert.match(reference, /`--bang`[^.]*alias[^.]*`--suffix "!"`/s);
 });
+
+test('--polite with arguments, --name, --stdin', () => {
+  assert.equal(runHello(['Ada', 'Linus', '--polite']).stdout, 'Hello, Dear Ada!\nHello, Dear Linus!\n');
+  assert.equal(runHello(['--polite', '--name', 'Ada', '--name', 'Linus']).stdout, 'Hello, Dear Ada!\nHello, Dear Linus!\n');
+  const r = spawnSync(process.execPath, [command, '--stdin', '--polite'], { encoding: 'utf8', input: 'Ada\nLinus\n' });
+  assert.equal(r.status, 0);
+  assert.equal(r.stdout, 'Hello, Dear Ada!\nHello, Dear Linus!\n');
+});
+
+test('--polite with --name-file and a file named --polite', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'polite-'));
+  try {
+    writeFileSync(join(dir, 'n.txt'), ' Ada \nLinus\n');
+    const r = run(['--name-file', join(dir, 'n.txt'), '--polite'], undefined, dir);
+    assert.equal(r.status, 0);
+    assert.equal(r.stdout, 'Hello, Dear Ada!\n');
+    writeFileSync(join(dir, '--polite'), 'Ada\n');
+    const o = run(['--name-file', '--polite'], undefined, dir);
+    assert.equal(o.status, 0);
+    assert.equal(o.stdout, 'Hello, Ada!\n');
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('--polite combines with case flags and keeps the default', () => {
+  for (const f of ['--shout', '--upper']) assert.equal(runHello(['Ada', '--polite', f]).stdout, 'HELLO, DEAR ADA!\n');
+  for (const f of ['--lower', '--lowercase']) assert.equal(runHello(['Ada', '--polite', f]).stdout, 'hello, dear ada!\n');
+  assert.equal(run(['--polite'], undefined).stdout, 'Hello, world!\n');
+});
+
+test('reference docs document --polite', () => {
+  assert.match(reference, /node bin\/hello\.mjs Ada --polite/);
+  assert.match(reference, /Hello, Dear Ada!/);
+});

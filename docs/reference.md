@@ -46,6 +46,11 @@ The standalone command accepts `--bang` as an alias for `--suffix "!"`; for
 example `node bin/hello.mjs Ada --bang` prints `Hello, Ada! !`. Combining
 `--bang` with `--suffix` prints an error to stderr and exits with status 1.
 
+The standalone command supports `--polite` to put `Dear ` before each name;
+for example `node bin/hello.mjs Ada --polite` prints `Hello, Dear Ada!`. It works
+with every name source and combines with `--shout`/`--upper` and
+`--lower`/`--lowercase`. Without a name the default greeting is unchanged.
+
 The standalone command also supports `--count` to print, after the greetings,
 a plain-text line `Greeted N time(s).` where N is the number of greeting lines
 printed. The line is never colored. For example,
