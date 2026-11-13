@@ -26,6 +26,9 @@ prints `hello, ada!`. `--lowercase` cannot be combined with `--shout`.
 The standalone command accepts `--upper` as an alias of `--shout`; it behaves
 identically, including with `--repeat` and the `--lowercase` conflict.
 
+The standalone command accepts `--lower` as an alias of `--lowercase`; it behaves
+identically, including with `--repeat` and the `--shout` conflict.
+
 The standalone command also supports `--prefix <text>` to place the supplied
 text and a space before the selected greeting. For example,
 `node bin/hello.mjs --prefix Hey Ada` prints `Hey Hello, Ada!`. This option
