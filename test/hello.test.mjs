@@ -899,6 +899,7 @@ test('--lower is an alias of --lowercase', () => {
 
 test('reference docs state --lower is an alias of --lowercase', () => {
   assert.match(reference, /`--lower` as an alias of `--lowercase`/);
+});
 
 const runHello = args => spawnSync(process.execPath, [command, ...args], { encoding: 'utf8' });
 
