@@ -42,6 +42,10 @@ supplied text after the selected greeting. For example,
 suffix text is not changed by `--shout` or `--lowercase`. Omitting the value
 prints `error: --suffix needs a value` to stderr and exits with status 1.
 
+The standalone command accepts `--bang` as an alias for `--suffix "!"`; for
+example `node bin/hello.mjs Ada --bang` prints `Hello, Ada! !`. Combining
+`--bang` with `--suffix` prints an error to stderr and exits with status 1.
+
 The standalone command also supports `--count` to print, after the greetings,
 a plain-text line `Greeted N time(s).` where N is the number of greeting lines
 printed. The line is never colored. For example,

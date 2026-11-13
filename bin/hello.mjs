@@ -18,6 +18,7 @@ let prefix;
 let invalidPrefix = false;
 let suffix;
 let invalidSuffix = false;
+let bang = false;
 let repeat = 1n;
 let repeatSpecified = false;
 let invalidRepeat = false;
@@ -45,6 +46,8 @@ for (let index = 0; index < rawArgs.length; index += 1) {
       suffix = rawArgs[index + 1];
       index += 1;
     }
+  } else if (arg === '--bang') {
+    bang = true;
   } else if (arg === '--name') {
     if (index + 1 >= rawArgs.length || isNameFileOperand(index + 1)) {
       invalidName = true;
@@ -104,7 +107,8 @@ const printGreeting = name => {
   const message = greeting(name);
   const selectedMessage = shout ? message.toUpperCase() : lowercase ? message.toLowerCase() : message;
   const prefixed = prefix === undefined ? selectedMessage : `${prefix} ${selectedMessage}`;
-  const output = suffix === undefined ? prefixed : `${prefixed} ${suffix}`;
+  const effectiveSuffix = bang ? '!' : suffix;
+  const output = effectiveSuffix === undefined ? prefixed : `${prefixed} ${effectiveSuffix}`;
   for (let printed = 0n; printed < repeat; printed += 1n) {
     greetedLines += 1;
     if (shouldUseColor) {
@@ -115,7 +119,10 @@ const printGreeting = name => {
   }
 };
 
-if (shout && lowercase) {
+if (bang && (suffix !== undefined || invalidSuffix)) {
+  console.error('error: --bang cannot be combined with --suffix');
+  process.exitCode = 1;
+} else if (shout && lowercase) {
   console.error('error: --lowercase and --shout cannot be combined');
   process.exitCode = 1;
 } else if (invalidRepeat) {
