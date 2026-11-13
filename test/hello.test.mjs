@@ -995,3 +995,40 @@ test('shout and plain greetings are exact under LANG=en_US.UTF-8', () => {
     assert.equal(result.stderr, '', `stderr for ${args.join(' ')}`);
   }
 });
+
+test('--whisper lowercases the greeting in either argument order and defaults to world', () => {
+  for (const [args, out] of [[['--whisper', 'Ada'], 'hello, ada!\n'], [['Ada', '--whisper'], 'hello, ada!\n'], [['--whisper'], 'hello, world!\n']]) {
+    const result = run(args, 'en_US.UTF-8');
+    assert.equal(result.status, 0);
+    assert.equal(result.stdout, out);
+    assert.equal(result.stderr, '');
+  }
+});
+
+test('--whisper conflicts with --shout and --upper in either order', () => {
+  for (const other of ['--shout', '--upper']) {
+    for (const args of [['--whisper', other, 'Ada'], [other, '--whisper', 'Ada']]) {
+      const result = run(args, 'en_US.UTF-8');
+      assert.equal(result.status, 1);
+      assert.equal(result.stdout, '');
+      assert.equal(result.stderr, 'error: --lowercase and --shout cannot be combined\n');
+    }
+  }
+});
+
+test('--whisper as a --name-file operand is a file name', () => {
+  const directory = mkdtempSync(join(tmpdir(), 'hello-whisper-'));
+  try {
+    writeFileSync(join(directory, '--whisper'), 'Ada\n');
+    const result = run(['--name-file', '--whisper'], 'en_US.UTF-8', directory);
+    assert.equal(result.status, 0);
+    assert.equal(result.stdout, 'Hello, Ada!\n');
+    assert.equal(result.stderr, '');
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
+});
+
+test('documents --whisper for the standalone command', () => {
+  assert.match(reference, /`--whisper`[\s\S]*alias of `--lowercase`[\s\S]*`node bin\/hello\.mjs --whisper Ada`[\s\S]*hello, ada!/);
+});

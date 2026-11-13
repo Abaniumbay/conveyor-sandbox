@@ -29,6 +29,11 @@ identically, including with `--repeat` and the `--lowercase` conflict.
 The standalone command accepts `--lower` as an alias of `--lowercase`; it behaves
 identically, including with `--repeat` and the `--shout` conflict.
 
+The standalone command accepts `--whisper` as an alias of `--lowercase`; for
+example, `node bin/hello.mjs --whisper Ada` prints `hello, ada!`. It behaves
+identically, including the `--shout`/`--upper` conflict. This option belongs to
+`node bin/hello.mjs` and is not supported by the installed `greet` command.
+
 The standalone command also supports `--prefix <text>` to place the supplied
 text and a space before the selected greeting. For example,
 `node bin/hello.mjs --prefix Hey Ada` prints `Hey Hello, Ada!`. This option
