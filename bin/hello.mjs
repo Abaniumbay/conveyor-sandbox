@@ -14,6 +14,7 @@ const outputLines = [];
 let greetedLines = 0;
 let shout = false;
 let lowercase = false;
+let whisper = false;
 let prefix;
 let invalidPrefix = false;
 let suffix;
@@ -66,8 +67,10 @@ for (let index = 0; index < rawArgs.length; index += 1) {
     quiet = true;
   } else if (arg === '--shout' || arg === '--upper') {
     shout = true;
-  } else if (arg === '--lowercase' || arg === '--lower' || arg === '--whisper') {
+  } else if (arg === '--lowercase' || arg === '--lower') {
     lowercase = true;
+  } else if (arg === '--whisper') {
+    whisper = true;
   } else if (arg === '--repeat') {
     if (repeatSpecified) duplicateRepeat = true;
     repeatSpecified = true;
@@ -108,7 +111,8 @@ args.push(...(nameFileIndex === -1 ? optionNames : []));
 const shouldUseColor = colorMode === 'auto' && (process.env.FORCE_TTY === '1' || process.stdout.isTTY);
 const printGreeting = name => {
   const message = greeting(polite && name?.trim() ? `Dear ${name.trim()}` : name);
-  const selectedMessage = shout ? message.toUpperCase() : lowercase ? message.toLowerCase() : message;
+  const lowered = message.toLowerCase();
+  const selectedMessage = shout ? message.toUpperCase() : whisper ? (lowered.endsWith('!') ? `${lowered.slice(0, -1)}...` : lowered) : lowercase ? lowered : message;
   const prefixed = prefix === undefined ? selectedMessage : `${prefix} ${selectedMessage}`;
   const effectiveSuffix = bang ? '!' : suffix;
   const output = effectiveSuffix === undefined ? prefixed : `${prefixed} ${effectiveSuffix}`;
@@ -124,6 +128,9 @@ const printGreeting = name => {
 
 if (bang && (suffix !== undefined || invalidSuffix)) {
   console.error('error: --bang cannot be combined with --suffix');
+  process.exitCode = 1;
+} else if (shout && whisper) {
+  console.error(usage);
   process.exitCode = 1;
 } else if (shout && lowercase) {
   console.error('error: --lowercase and --shout cannot be combined');

@@ -996,24 +996,58 @@ test('shout and plain greetings are exact under LANG=en_US.UTF-8', () => {
   }
 });
 
-test('--whisper lowercases the greeting in either argument order and defaults to world', () => {
-  for (const [args, out] of [[['--whisper', 'Ada'], 'hello, ada!\n'], [['Ada', '--whisper'], 'hello, ada!\n'], [['--whisper'], 'hello, world!\n']]) {
-    const result = run(args, 'en_US.UTF-8');
-    assert.equal(result.status, 0);
-    assert.equal(result.stdout, out);
-    assert.equal(result.stderr, '');
+const whisperUsage = 'Usage: node bin/hello.mjs [name | --name-file <path>] (at most one name source accepted)\n';
+const expectRun = (args, lang, status, stdout, stderr) => {
+  const result = run(args, lang);
+  assert.equal(result.status, status, `status for ${args.join(' ')}`);
+  assert.equal(result.stdout, stdout, `stdout for ${args.join(' ')}`);
+  assert.equal(result.stderr, stderr, `stderr for ${args.join(' ')}`);
+};
+
+test('--whisper lowercases the greeting and replaces the final ! with ...', () => {
+  expectRun(['--whisper', 'Ada'], 'en_US.UTF-8', 0, 'hello, ada...\n', '');
+  expectRun(['Ada', '--whisper'], 'en_US.UTF-8', 0, 'hello, ada...\n', '');
+  expectRun(['--whisper', 'Ada!'], 'en_US.UTF-8', 0, 'hello, ada!...\n', '');
+});
+
+test('--whisper runs before decorations', () => {
+  expectRun(['--whisper', '--prefix', 'Hey', 'Ada'], 'en_US.UTF-8', 0, 'Hey hello, ada...\n', '');
+  expectRun(['--whisper', '--suffix', 'See You', 'Ada'], 'en_US.UTF-8', 0, 'hello, ada... See You\n', '');
+  expectRun(['--whisper', '--bang', 'Ada'], 'en_US.UTF-8', 0, 'hello, ada... !\n', '');
+  expectRun(['--whisper', '--polite', 'Ada'], 'en_US.UTF-8', 0, 'hello, dear ada...\n', '');
+});
+
+test('--whisper applies to Persian, name files and every name', () => {
+  expectRun(['--whisper'], 'fa', 0, 'سلام، دنیا...\n', '');
+  withNameFile('ADA\n', path => expectRun(['--name-file', path, '--whisper'], 'en_US.UTF-8', 0, 'hello, ada...\n', ''));
+  expectRun(['--whisper', 'Ada', 'Linus'], 'en_US.UTF-8', 0, 'hello, ada...\nhello, linus...\n', '');
+});
+
+test('--whisper defaults to world', () => {
+  expectRun(['--whisper'], 'en_US.UTF-8', 0, 'hello, world...\n', '');
+});
+
+test('--whisper works with --repeat', () => {
+  const twice = 'hello, ada...\nhello, ada...\n';
+  expectRun(['--whisper', '--repeat', '2', 'Ada'], 'en_US.UTF-8', 0, twice, '');
+  expectRun(['--repeat', '2', '--whisper', 'Ada'], 'en_US.UTF-8', 0, twice, '');
+  expectRun(['--whisper', '--repeat', '0', 'Ada'], 'en_US.UTF-8', 1, '', 'error: --repeat must be a whole decimal number from 1 to 10\n');
+});
+
+test('--whisper conflicts with --shout and --upper in either order with the usage text', () => {
+  for (const other of ['--shout', '--upper']) {
+    expectRun(['--whisper', other, 'Ada'], 'en_US.UTF-8', 1, '', whisperUsage);
+    expectRun([other, '--whisper', 'Ada'], 'en_US.UTF-8', 1, '', whisperUsage);
   }
 });
 
-test('--whisper conflicts with --shout and --upper in either order', () => {
-  for (const other of ['--shout', '--upper']) {
-    for (const args of [['--whisper', other, 'Ada'], [other, '--whisper', 'Ada']]) {
-      const result = run(args, 'en_US.UTF-8');
-      assert.equal(result.status, 1);
-      assert.equal(result.stdout, '');
-      assert.equal(result.stderr, 'error: --lowercase and --shout cannot be combined\n');
-    }
-  }
+test('--lowercase and --lower keep the ! and their own shout conflict message', () => {
+  expectRun(['--lowercase', 'Ada'], 'en_US.UTF-8', 0, 'hello, ada!\n', '');
+  expectRun(['--lower', 'Ada'], 'en_US.UTF-8', 0, 'hello, ada!\n', '');
+  expectRun(['--lowercase'], 'en_US.UTF-8', 0, 'hello, world!\n', '');
+  expectRun(['--lowercase', '--repeat', '2', 'Ada'], 'en_US.UTF-8', 0, 'hello, ada!\nhello, ada!\n', '');
+  expectRun(['--lowercase', '--shout', 'Ada'], 'en_US.UTF-8', 1, '', 'error: --lowercase and --shout cannot be combined\n');
+  expectRun(['--shout', '--lower', 'Ada'], 'en_US.UTF-8', 1, '', 'error: --lowercase and --shout cannot be combined\n');
 });
 
 test('--whisper as a --name-file operand is a file name', () => {
@@ -1029,6 +1063,25 @@ test('--whisper as a --name-file operand is a file name', () => {
   }
 });
 
-test('documents --whisper for the standalone command', () => {
-  assert.match(reference, /`--whisper`[\s\S]*alias of `--lowercase`[\s\S]*`node bin\/hello\.mjs --whisper Ada`[\s\S]*hello, ada!/);
+test('documents --whisper in the README next to --shout', () => {
+  const section = readme.slice(readme.indexOf('## Standalone greeting'), readme.indexOf('## Running tests'));
+  const whisper = section.indexOf('--whisper');
+  const shout = section.indexOf('--shout');
+  assert.ok(shout !== -1 && whisper > shout);
+  assert.ok(!section.slice(shout, whisper).includes('## '));
+  assert.ok(section.includes('`--whisper`'));
+  assert.ok(section.includes('`node bin/hello.mjs --whisper Ada`'));
+  assert.ok(section.includes('hello, ada...'));
+  const result = run(['--whisper', 'Ada'], 'en_US.UTF-8');
+  assert.equal(result.stdout, 'hello, ada...\n');
+  assert.ok(readme.includes('hello, ada...'));
+});
+
+test('documents --whisper in the reference as lowercase plus ellipsis', () => {
+  assert.match(reference, /`node bin\/hello\.mjs --whisper Ada`[\s\S]*hello, ada\.\.\./);
+  const start = reference.indexOf('`--whisper`');
+  const paragraph = reference.slice(start, reference.indexOf('\n\n', start));
+  assert.ok(!paragraph.includes('alias of `--lowercase`'));
+  assert.ok(paragraph.includes('`--shout`/`--upper`'));
+  assert.ok(reference.includes('`--lower` as an alias of `--lowercase`'));
 });

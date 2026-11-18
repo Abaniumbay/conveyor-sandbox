@@ -18,7 +18,10 @@ prints it `n` times. The default is `1`; `n` must be a whole decimal number from
 greeting three times. The `--shout` option prints the entire selected greeting
 in upper case, not just the supplied name. For example,
 `node bin/hello.mjs --shout Ada` prints `HELLO, ADA!`. Without `--shout` the
-output is unchanged.
+output is unchanged. The `--whisper` option prints the entire selected greeting
+in lower case and replaces the final `!` with `...`. For example,
+`node bin/hello.mjs --whisper Ada` prints `hello, ada...`. It cannot be combined
+with `--shout`.
 
 ## Running tests
 
