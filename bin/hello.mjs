@@ -28,6 +28,7 @@ let duplicateRepeat = false;
 let colorMode;
 let colorModeMissing = false;
 let colorModeError = null;
+let versionCount = 0;
 
 for (let index = 0; index < rawArgs.length; index += 1) {
   const arg = rawArgs[index];
@@ -48,6 +49,8 @@ for (let index = 0; index < rawArgs.length; index += 1) {
       suffix = rawArgs[index + 1];
       index += 1;
     }
+  } else if (arg === '--version') {
+    versionCount += 1;
   } else if (arg === '--bang') {
     bang = true;
   } else if (arg === '--polite') {
@@ -126,7 +129,13 @@ const printGreeting = name => {
   }
 };
 
-if (bang && (suffix !== undefined || invalidSuffix)) {
+if (versionCount > 0 && rawArgs.length !== 1) {
+  console.error(usage);
+  process.exitCode = 1;
+} else if (versionCount === 1) {
+  const { version } = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
+  console.log(version);
+} else if (bang && (suffix !== undefined || invalidSuffix)) {
   console.error('error: --bang cannot be combined with --suffix');
   process.exitCode = 1;
 } else if (shout && whisper) {

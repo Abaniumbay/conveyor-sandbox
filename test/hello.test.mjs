@@ -1085,3 +1085,139 @@ test('documents --whisper in the reference as lowercase plus ellipsis', () => {
   assert.ok(paragraph.includes('`--shout`/`--upper`'));
   assert.ok(reference.includes('`--lower` as an alias of `--lowercase`'));
 });
+
+const versionUsage = 'Usage: node bin/hello.mjs [name | --name-file <path>] (at most one name source accepted)\n';
+const packageVersion = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')).version;
+const repoRoot = fileURLToPath(new URL('..', import.meta.url));
+
+function assertVersionUsage(args) {
+  const result = run(args, undefined, tmpdir());
+  assert.equal(result.status, 1, JSON.stringify(args));
+  assert.equal(result.stdout, '', JSON.stringify(args));
+  assert.equal(result.stderr, versionUsage, JSON.stringify(args));
+}
+
+test('--version prints the package version from any directory', () => {
+  const result = run(['--version'], undefined, tmpdir());
+  assert.equal(result.status, 0);
+  assert.equal(result.stdout, `${packageVersion}\n`);
+  assert.equal(result.stderr, '');
+});
+
+test('--version is independent of cwd and locale', () => {
+  for (const [lang, cwd] of [['fa', tmpdir()], [undefined, repoRoot]]) {
+    const result = run(['--version'], lang, cwd);
+    assert.equal(result.status, 0);
+    assert.equal(result.stdout, `${packageVersion}\n`);
+    assert.equal(result.stderr, '');
+  }
+});
+
+test('--version with a name is a usage error in either order', () => {
+  for (const args of [['--version', 'Ada'], ['Ada', '--version'], ['--version', 'Ada', 'Linus'], ['Ada', '--version', 'Linus'], ['--version', ''], ['', '--version']]) {
+    assertVersionUsage(args);
+  }
+});
+
+test('--version with any other valid option is a usage error', () => {
+  const others = [['--shout'], ['--upper'], ['--lowercase'], ['--lower'], ['--whisper'], ['--bang'], ['--polite'], ['--quiet'], ['--count'], ['--stdin'], ['--prefix', 'Hey'], ['--suffix', 'x'], ['--repeat', '2'], ['--color', 'auto'], ['--name', 'Ada']];
+  for (const other of others) {
+    assertVersionUsage(['--version', ...other]);
+    assertVersionUsage([...other, '--version']);
+  }
+});
+
+test('--version with --name-file is a usage error', () => {
+  withNameFile('Ada\n', path => {
+    for (const file of [path, `${path}.missing`]) {
+      assertVersionUsage(['--version', '--name-file', file]);
+      assertVersionUsage(['--name-file', file, '--version']);
+    }
+  });
+  assertVersionUsage(['--version', '--name-file']);
+});
+
+test('--version usage error takes precedence over other diagnostics', () => {
+  const others = [['--repeat', '0'], ['--repeat', '11'], ['--repeat', 'abc'], ['--color', 'bad'], ['--bang', '--suffix', 'x'], ['--shout', '--lowercase'], ['--shout', '--whisper'], ['--repeat', '1', '--repeat', '2']];
+  for (const other of others) {
+    assertVersionUsage(['--version', ...other]);
+    assertVersionUsage([...other, '--version']);
+  }
+  for (const other of [['--repeat'], ['--prefix'], ['--suffix'], ['--name'], ['--color']]) {
+    assertVersionUsage(['--version', ...other]);
+  }
+});
+
+test('--version with unknown options is a usage error with exit 1', () => {
+  for (const args of [['--version', '--unknown'], ['--unknown', '--version'], ['--version', '-z'], ['-z', '--version'], ['--version', '-h']]) {
+    assertVersionUsage(args);
+  }
+});
+
+test('--version as an operand still counts as another option next to a real --version', () => {
+  for (const args of [['--version', '--prefix', '--version'], ['--prefix', '--version', '--version'], ['--suffix', '--version', '--version'], ['--version', '--name', '--version']]) {
+    assertVersionUsage(args);
+  }
+});
+
+test('repeated --version is a usage error', () => {
+  for (const args of [['--version', '--version'], ['--version', '--version', '--version'], ['--version', 'Ada', '--version'], ['--version', '--shout', '--version']]) {
+    assertVersionUsage(args);
+  }
+});
+
+test('--version stays a literal operand of value-taking options', () => {
+  const cases = [
+    [['--prefix', '--version', 'Ada'], '--version Hello, Ada!\n'],
+    [['--suffix', '--version', 'Ada'], 'Hello, Ada! --version\n'],
+    [['--prefix', '--version'], '--version Hello, world!\n'],
+    [['--suffix', '--version'], 'Hello, world! --version\n'],
+    [['--name', '--version'], 'Hello, --version!\n'],
+  ];
+  for (const [args, stdout] of cases) {
+    const result = run(args);
+    assert.equal(result.status, 0, JSON.stringify(args));
+    assert.equal(result.stdout, stdout);
+    assert.equal(result.stderr, '');
+  }
+});
+
+test('--version as the operand of --repeat and --color keeps their diagnostics', () => {
+  let result = run(['--repeat', '--version']);
+  assert.equal(result.status, 1);
+  assert.equal(result.stdout, '');
+  assert.equal(result.stderr, 'error: --repeat must be a whole decimal number from 1 to 10\n');
+  result = run(['--color', '--version']);
+  assert.equal(result.status, 1);
+  assert.equal(result.stdout, '');
+  assert.equal(result.stderr, 'error: unsupported color mode: --version\n');
+});
+
+test('--version as the --name-file operand is a path', () => {
+  const a = mkdtempSync(join(tmpdir(), 'hello-ver-a-'));
+  const b = mkdtempSync(join(tmpdir(), 'hello-ver-b-'));
+  try {
+    writeFileSync(join(a, '--version'), 'Zed\n');
+    let result = run(['--name-file', '--version'], undefined, a);
+    assert.equal(result.status, 0);
+    assert.equal(result.stdout, 'Hello, Zed!\n');
+    assert.equal(result.stderr, '');
+    result = run(['--name-file', '--version'], undefined, b);
+    assert.equal(result.status, 1);
+    assert.equal(result.stdout, '');
+    assert.ok(result.stderr.startsWith('Error: cannot read name file --version:'));
+  } finally {
+    rmSync(a, { recursive: true, force: true });
+    rmSync(b, { recursive: true, force: true });
+  }
+});
+
+test('documents --version in the README standalone greeting section', () => {
+  const section = readme.slice(readme.indexOf('## Standalone greeting'), readme.indexOf('## Running tests'));
+  assert.ok(section.includes('`node bin/hello.mjs --version`'));
+  assert.ok(section.includes(packageVersion));
+  assert.match(section, /stderr/);
+  assert.match(section, /status 1/);
+  assert.match(section, /name or\s+any other option/);
+  assert.equal(run(['--version']).stdout, `${packageVersion}\n`);
+});

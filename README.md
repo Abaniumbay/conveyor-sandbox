@@ -21,7 +21,9 @@ in upper case, not just the supplied name. For example,
 output is unchanged. The `--whisper` option prints the entire selected greeting
 in lower case and replaces the final `!` with `...`. For example,
 `node bin/hello.mjs --whisper Ada` prints `hello, ada...`. It cannot be combined
-with `--shout`.
+with `--shout`. Running `node bin/hello.mjs --version` prints the package version
+(currently `1.0.0`) and exits 0. It must be used alone: combined with a name or
+any other option it prints the usage text to stderr and exits with status 1.
 
 ## Running tests
 
